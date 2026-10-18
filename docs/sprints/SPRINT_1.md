@@ -415,6 +415,18 @@ kolejnym sprintem.
 
 ---
 
+## Przydział zadań zespołu
+
+| Element sprintu | Owner | Recenzent |
+| --- | --- | --- |
+| Dataset, karta projektu i próbka CI | Arrow (s29379) | Anton (s30253) |
+| EDA i decyzje o typach cech | Anton (s30253) | Arrow (s29379) |
+| Input normalization i training-only filtering | Anton (s30253) | Arrow (s29379) |
+| sklearn Pipeline, baseline i metryki | Arrow (s29379) | Anton (s30253) |
+| Diagram architektury v0, CI i integracja | Arrow (s29379) | Anton (s30253) |
+
+Integrator sprintu: Arrow (s29379) — koordynacja Definition of Done, smoke testu i demo.
+
 ## Podział pracy w zespole
 
 Przykładowe obszary odpowiedzialności:
