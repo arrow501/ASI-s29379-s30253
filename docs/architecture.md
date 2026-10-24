@@ -47,11 +47,50 @@ gotowy — sprawdza to `python scripts/check_dod.py`.
 
 <!-- DIAGRAM-V0:START -->
 ```mermaid
-flowchart LR
-    data["TODO: źródło danych"] --> model["TODO: kolejne elementy systemu"]
+flowchart TB
+    subgraph DATA["Dane i kontrakt — S1"]
+        UCI["UCI Bank Marketing (bank-full)"] --> RAW["bank-full.csv<br/>lokalnie, poza Gitem"]
+        CONTRACT["datasets.yaml + project.yaml<br/>target y, ALLOWED/EXCLUDED, time_ordered"]
+    end
+
+    subgraph TRAINING["Przygotowanie danych i baseline — S1"]
+        NORM["normalize_input()<br/>input normalization"]
+        FILTER["filter_training_rows()<br/>tylko dane treningowe"]
+        SPLIT["Podział time_ordered<br/>train / test"]
+        PREP["Model preprocessing w sklearn Pipeline<br/>imputacja, skalowanie, kodowanie"]
+        MODELS["DummyClassifier + LogisticRegression<br/>porównanie F1, predict_proba()"]
+        METRICS["metrics.json<br/>metryki i confusion matrix"]
+    end
+
+    RAW --> NORM --> FILTER --> SPLIT --> PREP --> MODELS --> METRICS
+    CONTRACT -.-> NORM
+    CONTRACT -.-> SPLIT
+    CONTRACT -.-> PREP
+
+    ARTEFACT["Pakiet modelu — plan S3"]
+    MODELS --> ARTEFACT
+
+    subgraph SERVING["Predykcja i stan — plan S4–S5"]
+        UI["Streamlit UI<br/>fikcyjne dane klienta"]
+        API["API<br/>walidacja + normalize_input()"]
+        DB["Persistence<br/>zapis predykcji"]
+        UI -->|"żądanie predykcji"| API
+        API -->|"P(y=yes) i predykcja"| UI
+        API --> DB
+    end
+
+    ARTEFACT -->|"model wczytany raz"| API
+    CLOUD["Cloud Run, secret i logi — plan S6"]
+    API -.-> CLOUD
+    UI -.-> CLOUD
+
+    classDef s1 fill:#e8f5e9,stroke:#2e7d32,color:#111;
+    classDef planned fill:#f5f5f5,stroke:#616161,stroke-dasharray:5 5,color:#111;
+    class UCI,RAW,CONTRACT,NORM,FILTER,SPLIT,PREP,MODELS,METRICS s1;
+    class ARTEFACT,UI,API,DB,CLOUD planned;
 ```
 
-TODO: krótki opis diagramu (3–5 zdań).
+Źródłem danych jest UCI Bank Marketing, a reguły targetu, dozwolonych cech i podziału przechowują kontrakty w repozytorium. Input normalization jest wspólne dla treningu i przyszłego API, training-only filtering dotyczy wyłącznie treningu, a preprocessing wymagający `fit()` należy do sklearn `Pipeline`. W Sprincie 1 porównamy `DummyClassifier` i `LogisticRegression` na podziale `time_ordered`, zapisując metryki dla klasy `yes`. Zielone elementy będą istnieć po Sprincie 1, a szare są planowane: pakiet modelu trafi do API, które zwróci do UI wartość `P(y=yes)` i zapisze predykcję w warstwie persistence. Docelowo API i UI zostaną wdrożone w Cloud Run z osobnym sekretem i logami.
 <!-- DIAGRAM-V0:END -->
 
 ## Historia zmian architektury

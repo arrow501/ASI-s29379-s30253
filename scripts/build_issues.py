@@ -53,6 +53,16 @@ def render_issue(number: int, sprint_text: str) -> str:
     goal = [line for line in section(lines, "Cel") if line.strip()]
     dod = bullet_items(section(lines, "Definition of Done"))
     checklist = [f"- [ ] {item}" for item in dod]
+    if "## Przydział zadań zespołu" in lines:
+        work_split = "\n".join(section(lines, "Przydział zadań zespołu")).strip().splitlines()
+    else:
+        work_split = [
+            "| Element sprintu | Owner | Recenzent |",
+            "| --- | --- | --- |",
+            "| _do uzupełnienia_ | | |",
+            "",
+            "Integrator sprintu: _do uzupełnienia_",
+        ]
     body = [
         f"# {title}",
         "",
@@ -71,11 +81,7 @@ def render_issue(number: int, sprint_text: str) -> str:
         "",
         "## Podział pracy (uzupełnia zespół na początku sprintu)",
         "",
-        "| Element sprintu | Owner | Recenzent |",
-        "| --- | --- | --- |",
-        "| _do uzupełnienia_ | | |",
-        "",
-        "Integrator sprintu: _do uzupełnienia_",
+        *work_split,
         "",
         "## Pełny opis",
         "",

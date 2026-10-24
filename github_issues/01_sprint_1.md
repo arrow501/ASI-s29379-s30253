@@ -33,9 +33,13 @@ w sklearn `Pipeline` z działającymi testami i CI.
 
 | Element sprintu | Owner | Recenzent |
 | --- | --- | --- |
-| _do uzupełnienia_ | | |
+| Dataset, karta projektu i próbka CI | Arrow (s29379) | Anton (s30253) |
+| EDA i decyzje o typach cech | Anton (s30253) | Arrow (s29379) |
+| Input normalization i training-only filtering | Anton (s30253) | Arrow (s29379) |
+| sklearn Pipeline, baseline i metryki | Arrow (s29379) | Anton (s30253) |
+| Diagram architektury v0, CI i integracja | Arrow (s29379) | Anton (s30253) |
 
-Integrator sprintu: _do uzupełnienia_
+Integrator sprintu: Arrow (s29379) — koordynacja Definition of Done, smoke testu i demo.
 
 ## Pełny opis
 

@@ -16,15 +16,15 @@ powiązane, ale nie zawierają gotowych rozwiązań ani zadań do wykonania wcze
 
 | Pole | Wartość |
 |---|---|
-| Zespół i integrator Sprintu 1 | TODO |
-| Dataset (id z `docs/datasets.md`) | TODO |
-| Źródło, licencja i cytowanie (DOI) | TODO |
-| Data pobrania danych | TODO |
-| SHA-256 pliku danych (`fingerprint.json`) | TODO |
-| Dane osobowe w zbiorze i sposób postępowania | TODO |
-| Target i klasa pozytywna | TODO |
-| Metryka główna i uzasadnienie | TODO |
-| Użytkownik systemu i decyzja, którą wspiera model | TODO |
+| Zespół i integrator Sprintu 1 | Arrow (s29379) i Anton (s30253); integrator: Arrow (s29379) |
+| Dataset (id z `docs/datasets.md`) | `bank_marketing` — Bank Marketing (`bank-full`) |
+| Źródło, licencja i cytowanie (DOI) | [UCI Machine Learning Repository](https://archive.ics.uci.edu/dataset/222/bank+marketing), CC BY 4.0, DOI: [10.24432/C5K306](https://doi.org/10.24432/C5K306) |
+| Data pobrania danych | 2026-10-18 (UTC) |
+| SHA-256 pliku danych (`fingerprint.json`) | `d1513ec63b385506f7cfce9f2c5caa9fe99e7ba4e8c3fa264b3aaf0f849ed32d` |
+| Dane osobowe w zbiorze i sposób postępowania | Zbiór nie zawiera imion, nazwisk ani identyfikatorów bezpośrednich, ale zawiera atrybuty finansowe i kampanijne klientów. Pełne dane pozostają poza Gitem; w demonstracji API/UI używamy wyłącznie fikcyjnych rekordów. |
+| Target i klasa pozytywna | `y`; klasa pozytywna `yes` — klient założy lokatę terminową |
+| Metryka główna i uzasadnienie | F1 dla klasy `yes`. Klasa pozytywna stanowi 11,70% danych, a F1 równoważy precision i recall przy priorytetyzacji klientów; sama accuracy byłaby myląca. |
+| Użytkownik systemu i decyzja, którą wspiera model | Zespół marketingu banku; model wspiera priorytetyzację klientów do kontaktu telefonicznego przed poznaniem wyniku bieżącej rozmowy. |
 <!-- KARTA-PROJEKTU:END -->
 
 ## Mapa projektu
