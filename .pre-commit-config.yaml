@@ -1,6 +1,15 @@
 # Hooki uruchamiane przy każdym commicie (po `pre-commit install`) i w CI.
 # Wersje są przypięte; aktualizacja tylko świadomie: `pre-commit autoupdate` + PR.
 repos:
+  - repo: local
+    hooks:
+      - id: check-project-config
+        name: Validate project configuration against dataset contract
+        entry: python scripts/check_project_config.py
+        language: system
+        pass_filenames: false
+        files: ^(project\.yaml|src/asi_project/datasets\.yaml|scripts/check_project_config\.py|src/asi_project/(config|data)\.py|\.pre-commit-config\.yaml)$
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
     hooks:

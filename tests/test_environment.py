@@ -53,5 +53,7 @@ def test_pre_commit_config_name_and_pinned_revs(repo_root):
     assert not (repo_root / ".pre-commit-config.yml").exists()
     config = yaml.safe_load((repo_root / ".pre-commit-config.yaml").read_text(encoding="utf-8"))
     for repo in config["repos"]:
+        if repo["repo"] == "local":
+            continue
         assert repo["rev"] not in {"main", "master", "HEAD"}
         assert re.fullmatch(r"v?\d+(\.\d+)+", repo["rev"]), repo["rev"]

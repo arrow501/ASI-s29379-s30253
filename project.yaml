@@ -3,10 +3,10 @@
 
 dataset: bank_marketing
 
-# TODO (S1): typy cech po EDA. Wyłącznie kolumny z ALLOWED FEATURES wybranego datasetu.
+# Wstępne typy cech do baseline; do weryfikacji po EDA (issue #3).
 features:
-  numeric: []
-  categorical: []
+  numeric: [age, balance, day, campaign, pdays, previous]
+  categorical: [job, marital, education, default, housing, loan, contact, month, poutcome]
 
 split:
   test_size: 0.2
