@@ -11,15 +11,15 @@ w sklearn `Pipeline` z działającymi testami i CI.
 
 ## Definition of Done
 
-- [x] Dataset jest wybrany i wpisany do `project.yaml`.
+- [ ] Dataset jest wybrany i wpisany do `project.yaml`.
 - [ ] Karta projektu w `README.md` jest kompletna.
 - [ ] Pełne dane są pobierane skryptem i nie znajdują się w repozytorium.
 - [ ] `data/01_raw/sample.csv` znajduje się w repozytorium i zawiera obie klasy.
-- [x] `project.yaml` zawiera decyzje zespołu dotyczące typów cech i splitu.
-- [x] `validate()` przechodzi dla danych projektu.
-- [x] `normalize_input()` jest zaimplementowane i przechodzi testy inference-safe.
-- [x] `filter_training_rows()` jest zaimplementowane, jeśli dataset tego wymaga.
-- [x] `notebooks/01_eda.ipynb` zawiera EDA oraz zapisane decyzje.
+- [ ] `project.yaml` zawiera decyzje zespołu dotyczące typów cech i splitu.
+- [ ] `validate()` przechodzi dla danych projektu.
+- [ ] `normalize_input()` jest zaimplementowane i przechodzi testy inference-safe.
+- [ ] `filter_training_rows()` jest zaimplementowane, jeśli dataset tego wymaga.
+- [ ] `notebooks/01_eda.ipynb` zawiera EDA oraz zapisane decyzje.
 - [ ] `DummyClassifier` i `LogisticRegression` są porównane.
 - [ ] `LogisticRegression` działa wewnątrz sklearn `Pipeline`.
 - [ ] `predict_proba()` działa.
