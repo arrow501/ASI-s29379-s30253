@@ -76,6 +76,34 @@ Na czystym starcie `pytest` przechodzi, a testy projektu są pomijane z komunika
 Dalej postępujcie według [`docs/sprints/SPRINT_1.md`](docs/sprints/SPRINT_1.md). Postęp
 względem Definition of Done pokazuje `python scripts/check_dod.py --sprint 1`.
 
+### Workspace w VS Code
+
+Otwórz [`ASI.code-workspace`](ASI.code-workspace) przez **File → Open Workspace
+from File** lub wpisz `code ASI.code-workspace` w terminalu. Plik otwiera całe
+repozytorium i ustawia pytest, importy z `src` oraz formatowanie Python przez
+Ruff. VS Code zaproponuje też rozszerzenia do Pythona, notebooków i YAML.
+Ścieżki są względne, więc każdy może używać tego samego pliku.
+
+Po instalacji środowiska wybierz **Python: Select Interpreter → asi-ml**.
+W notebooku kliknij **Select Kernel → Select Another Kernel → Python Environments
+→ asi-ml**. VS Code zapamięta ten wybór lokalnie. Wybrany interpreter służy
+również do debugowania przez F5 i uruchamiania testów z panelu testów.
+
+W **Tasks: Run Task** znajdziesz zadania z prefiksem **ASI:**: sprawdzenie
+środowiska i konfiguracji, testy, pre-commit, pobranie danych, uruchomienie
+baseline oraz sprawdzenie wymagań Sprintu 1. Wszystkie korzystają z
+`conda run -n asi-ml python …`. Wymagają gotowego środowiska `asi-ml` i polecenia
+`conda` w PATH. Jeśli VS Code nie znajduje Condy, otwórz workspace poleceniem
+`code ASI.code-workspace` z terminala, w którym działa `conda`.
+
+Przed uruchomieniem baseline na pełnym zbiorze pobierz dane. Wynik trafi do
+`metrics.json`. Zadanie dla próbki CI zapisuje wynik w ignorowanym pliku
+`.pytest_cache/metrics_ci.json`.
+
+Przy commitowaniu aktywuj `asi-ml` w terminalu, żeby hooki miały dostęp do
+zależności projektu. Ruff formatuje pliki Python przy zapisie, a pre-commit
+sprawdza zmiany przed commitem.
+
 Najważniejsze pliki Sprintu 1:
 
 | Plik | Kto edytuje | Po co |

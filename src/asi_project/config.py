@@ -131,9 +131,25 @@ def load_project_config(root: Path | None = None) -> ProjectConfig:
     """Wczytuje ``project.yaml`` zespołu."""
     root = find_repo_root(root)
     raw = _read_yaml(root / PROJECT_FILE)
-    features = raw.get("features") or {}
-    split = raw.get("split") or {}
-    paths = raw.get("paths") or {}
+    sections = {}
+    for name in ("features", "split", "paths"):
+        section = raw.get(name, {})
+        if not isinstance(section, dict):
+            raise ConfigError(f"Pole '{name}' musi być mapą klucz-wartość.")
+        sections[name] = section
+    features, split, paths = (sections[name] for name in ("features", "split", "paths"))
+    for name in ("numeric", "categorical"):
+        names = features.get(name, [])
+        if not isinstance(names, list) or any(
+            not isinstance(value, str) or not value.strip() for value in names
+        ):
+            raise ConfigError(f"features.{name} musi być listą niepustych nazw kolumn.")
+    test_size = split.get("test_size", 0.2)
+    random_state = split.get("random_state", 42)
+    if isinstance(test_size, bool) or not isinstance(test_size, int | float):
+        raise ConfigError("split.test_size musi być liczbą.")
+    if isinstance(random_state, bool) or not isinstance(random_state, int):
+        raise ConfigError("split.random_state musi być liczbą całkowitą.")
     dataset_id = raw.get("dataset")
     return ProjectConfig(
         root=root,

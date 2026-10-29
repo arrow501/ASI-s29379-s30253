@@ -1,0 +1,230 @@
+{
+  "folders": [
+    {
+      "name": "ASI",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "python.analysis.extraPaths": [
+      "./src"
+    ],
+    "python.testing.pytestEnabled": true,
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestArgs": [
+      "tests"
+    ],
+    "python.testing.cwd": "${workspaceFolder:ASI}",
+    "files.eol": "\n",
+    "[python]": {
+      "editor.defaultFormatter": "charliermarsh.ruff",
+      "editor.formatOnSave": true
+    },
+    "files.exclude": {
+      "**/__pycache__": true,
+      "**/*.egg-info": true,
+      ".pytest_cache": true,
+      ".ruff_cache": true
+    },
+    "search.exclude": {
+      ".venv": true,
+      "data/01_raw/bank_marketing": true
+    },
+    "python-envs.defaultEnvManager": "ms-python.python:conda",
+    "python-envs.pythonProjects": [
+      {
+        "path": ".",
+        "envManager": "ms-python.python:conda"
+      }
+    ]
+  },
+  "extensions": {
+    "recommendations": [
+      "ms-python.python",
+      "ms-python.vscode-pylance",
+      "ms-python.debugpy",
+      "ms-toolsai.jupyter",
+      "charliermarsh.ruff",
+      "redhat.vscode-yaml",
+      "ms-python.vscode-python-envs"
+    ]
+  },
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "ASI: check environment",
+        "type": "process",
+        "command": "conda",
+        "args": [
+          "run",
+          "--no-capture-output",
+          "-n",
+          "asi-ml",
+          "python",
+          "scripts/check_env.py"
+        ],
+        "options": {
+          "cwd": "${workspaceFolder:ASI}"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "ASI: check project configuration",
+        "type": "process",
+        "command": "conda",
+        "args": [
+          "run",
+          "--no-capture-output",
+          "-n",
+          "asi-ml",
+          "python",
+          "scripts/check_project_config.py"
+        ],
+        "options": {
+          "cwd": "${workspaceFolder:ASI}"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "ASI: tests",
+        "type": "process",
+        "command": "conda",
+        "args": [
+          "run",
+          "--no-capture-output",
+          "-n",
+          "asi-ml",
+          "python",
+          "-m",
+          "pytest"
+        ],
+        "options": {
+          "cwd": "${workspaceFolder:ASI}"
+        },
+        "problemMatcher": [],
+        "group": {
+          "kind": "test",
+          "isDefault": true
+        }
+      },
+      {
+        "label": "ASI: pre-commit",
+        "type": "process",
+        "command": "conda",
+        "args": [
+          "run",
+          "--no-capture-output",
+          "-n",
+          "asi-ml",
+          "python",
+          "-m",
+          "pre_commit",
+          "run",
+          "--all-files"
+        ],
+        "options": {
+          "cwd": "${workspaceFolder:ASI}"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "ASI: download full data",
+        "type": "process",
+        "command": "conda",
+        "args": [
+          "run",
+          "--no-capture-output",
+          "-n",
+          "asi-ml",
+          "python",
+          "scripts/download_data.py"
+        ],
+        "options": {
+          "cwd": "${workspaceFolder:ASI}"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "ASI: baseline (full data)",
+        "type": "process",
+        "command": "conda",
+        "args": [
+          "run",
+          "--no-capture-output",
+          "-n",
+          "asi-ml",
+          "python",
+          "scripts/run_notebook.py",
+          "notebooks/02_baseline.ipynb"
+        ],
+        "options": {
+          "cwd": "${workspaceFolder:ASI}",
+          "env": {
+            "ASI_DATA_MODE": "full",
+            "ASI_METRICS_PATH": "${workspaceFolder:ASI}/metrics.json",
+            "MPLBACKEND": "Agg"
+          }
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "ASI: baseline (CI sample)",
+        "type": "process",
+        "command": "conda",
+        "args": [
+          "run",
+          "--no-capture-output",
+          "-n",
+          "asi-ml",
+          "python",
+          "scripts/run_notebook.py",
+          "notebooks/02_baseline.ipynb"
+        ],
+        "options": {
+          "cwd": "${workspaceFolder:ASI}",
+          "env": {
+            "ASI_DATA_MODE": "sample",
+            "ASI_METRICS_PATH": "${workspaceFolder:ASI}/.pytest_cache/metrics_ci.json",
+            "MPLBACKEND": "Agg"
+          }
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "ASI: Sprint 1 checks",
+        "type": "process",
+        "command": "conda",
+        "args": [
+          "run",
+          "--no-capture-output",
+          "-n",
+          "asi-ml",
+          "python",
+          "scripts/check_dod.py",
+          "--sprint",
+          "1",
+          "--strict"
+        ],
+        "options": {
+          "cwd": "${workspaceFolder:ASI}"
+        },
+        "problemMatcher": []
+      }
+    ]
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "ASI: debug current Python file",
+        "type": "debugpy",
+        "request": "launch",
+        "program": "${file}",
+        "cwd": "${workspaceFolder:ASI}",
+        "console": "integratedTerminal",
+        "justMyCode": true
+      }
+    ]
+  }
+}
