@@ -91,9 +91,12 @@ def test_default_input_normalization_rules_and_idempotence(toy_frame):
 
 def test_filter_training_rows_only_removes_rows(toy_contract, toy_frame):
     with_missing = toy_frame.copy()
+    # Preserve input order, including when index labels are not sorted by time.
+    with_missing.index = list(reversed(with_missing.index))
     with_missing.loc[3, "label"] = np.nan
     filtered = filter_training_rows(with_missing, toy_contract)
     assert len(filtered) == len(toy_frame) - 1
+    pd.testing.assert_index_equal(filtered.index, with_missing.index[with_missing["label"].notna()])
     assert set(filtered.index) <= set(with_missing.index)
     assert list(filtered.columns) == list(with_missing.columns)
     pd.testing.assert_frame_equal(filtered, with_missing.loc[filtered.index])

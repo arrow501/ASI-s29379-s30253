@@ -115,6 +115,10 @@ def test_training_filter_only_removes_records(project):
     assert set(filtered.index) <= set(normalized.index)
     assert list(filtered.columns) == list(normalized.columns)
     assert filtered[project.contract.target].notna().all()
+    pd.testing.assert_index_equal(
+        filtered.index,
+        normalized.index[normalized[project.contract.target].map(label_text).notna()],
+    )
     pd.testing.assert_frame_equal(
         filtered,
         normalized.loc[filtered.index],

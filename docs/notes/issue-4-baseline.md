@@ -23,15 +23,16 @@ po zmianie któregoś z plików YAML. Kontrakt prowadzącej w
 - Zaczynamy od regresji logistycznej bez strojenia. Porównujemy ją z modelem
   przewidującym najczęstszą klasę na tym samym podziale. Główną metryką jest F1.
 
-Do czasu EDA traktujemy `day` jako liczbę, `unknown` jako osobną kategorię,
-a `pdays=-1` zostawiamy jako oznaczenie braku wcześniejszego kontaktu.
-Wrócimy do tych decyzji po integracji issue #3 i ponownie policzymy metryki.
-Obecne funkcje przygotowania danych wystarczają do uruchomienia baseline.
+Po EDA (issue #3) traktujemy `day` jako liczbę, `unknown` jako osobną kategorię,
+a `pdays=-1` zamieniamy w normalizacji na brak danych typu `Int64`.
+Imputacja medianą pozostaje wewnątrz pipeline. Informację o braku wcześniejszego
+kontaktu zachowuje `previous`: na pełnych danych `previous == 0` odpowiada
+dokładnie pierwotnemu `pdays == -1`. Metryki przeliczyliśmy po połączeniu zmian.
 
 ## Stan prac i sprawdzenia
 
 Pierwsza wersja jest gotowa do przejrzenia. Na pełnych danych mamy 36 168
-rekordów treningowych i 9 043 testowe. Regresja logistyczna osiąga F1 0,2237
+rekordów treningowych i 9 043 testowe. Regresja logistyczna osiąga F1 0,2238
 oraz recall 0,1429. F1 modelu dummy wynosi 0. Niski recall wymaga dalszej pracy.
 Wersje głównych bibliotek zgadzają się z przypiętymi zależnościami.
 
