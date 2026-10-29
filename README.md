@@ -100,6 +100,17 @@ Przed uruchomieniem baseline na pełnym zbiorze pobierz dane. Wynik trafi do
 `metrics.json`. Zadanie dla próbki CI zapisuje wynik w ignorowanym pliku
 `.pytest_cache/metrics_ci.json`.
 
+Ten sam test z katalogu głównego repozytorium:
+
+```bash
+ASI_DATA_MODE=sample ASI_METRICS_PATH=.pytest_cache/metrics_ci.json \
+  python scripts/run_notebook.py notebooks/02_baseline.ipynb
+python scripts/check_metrics.py .pytest_cache/metrics_ci.json --data-mode sample
+```
+
+Względna ścieżka `ASI_METRICS_PATH` jest liczona od katalogu głównego repozytorium,
+również gdy kernel notebooka pracuje w `notebooks/`.
+
 Przy commitowaniu aktywuj `asi-ml` w terminalu, żeby hooki miały dostęp do
 zależności projektu. Ruff formatuje pliki Python przy zapisie, a pre-commit
 sprawdza zmiany przed commitem.
@@ -172,6 +183,7 @@ CI nie korzysta z sekretów, W&B ani AutoGluona.
 - Każda osoba ma owned item z merytorycznym review innej osoby.
 
 Pełna lista i kroki: [`docs/sprints/SPRINT_1.md`](docs/sprints/SPRINT_1.md).
+Wynik integracji i pozostałe potwierdzenia: [podsumowanie Sprintu 1](docs/notes/sprint-1-wrap-up.md).
 
 ## Architektura i scaffold S1–S6
 

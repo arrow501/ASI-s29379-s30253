@@ -31,25 +31,14 @@ dokładnie pierwotnemu `pdays == -1`. Metryki przeliczyliśmy po połączeniu zm
 
 ## Stan prac i sprawdzenia
 
-Pierwsza wersja jest gotowa do przejrzenia. Na pełnych danych mamy 36 168
-rekordów treningowych i 9 043 testowe. Regresja logistyczna osiąga F1 0,2238
-oraz recall 0,1429. F1 modelu dummy wynosi 0. Niski recall wymaga dalszej pracy.
-Wersje głównych bibliotek zgadzają się z przypiętymi zależnościami.
+EDA i baseline są scalone przez PR #7 i #6, oba po review drugiej osoby.
+Na pełnych danych mamy 36 168 rekordów treningowych i 9043 testowe.
+Po uwzględnieniu normalizacji z EDA F1 wynosi 0,223807, a recall 0,142857.
+DummyClassifier ma F1 równe 0. Niski recall pozostaje ograniczeniem baseline.
 
-Przed review przeszły 52 testy, wykonanie notebooka na pełnych danych i próbce
-CI oraz ścisłe automatyczne sprawdzenia Sprintu 1. Wersja notebooka przygotowana do
-commitu ma usunięte wyniki komórek. Zostają review drugiej osoby, niezależne
-uruchomienie ze świeżego klona i sprawdzenie Kedro u każdej osoby.
-
-Zmiany przeszły dodatkowe review dwóch subagentów. W końcowym przeglądzie
-nie znaleziono kolejnych błędów. Zostają zielone CI w PR i review Antona.
-Hook konfiguracji działa przy commicie i wymaga aktywnego środowiska projektu.
-
-## Docelowa dokumentacja
-
-Opis pipeline przeniesiemy do `docs/architecture.md`, a wyniki i ograniczenia
-do `docs/model_card.md`. Ważniejsze decyzje z uzasadnieniem trafią do
-`docs/adr/`. Tutaj zapisujemy bieżące ustalenia, wyniki i otwarte pytania.
+Aktualny stan integracji i pozostałe potwierdzenia opisuje
+[podsumowanie Sprintu 1](sprint-1-wrap-up.md). Model Card i ADR pozostają
+zadaniami kolejnych sprintów.
 
 ## Poprawki po review
 
@@ -64,3 +53,10 @@ najpierw odtworzyły błędy, a po poprawkach przechodzą.
 Po usunięciu wyników notebooka przez hook przeszło wszystkich 67 testów,
 bez pomijania. Ścisłe automatyczne sprawdzenia Sprintu 1 również przeszły.
 Ponowne wykonanie notebooka na pełnych danych dało identyczne metryki.
+
+## Integracja Sprintu 1
+
+Dodaliśmy testy wykrywające brak zamiany `pdays=-1` na brak danych oraz zmianę
+kolejności rekordów w filtrowaniu. Łącznie przechodzi 71 testów. Metryki z pełnych
+danych zostały odświeżone. Notebook 02 rozwiązuje względny `ASI_METRICS_PATH`
+względem katalogu projektu, więc zapis i walidacja próbki CI używają tego samego pliku.
