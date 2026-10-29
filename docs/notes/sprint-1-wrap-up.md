@@ -28,9 +28,15 @@ Względna ścieżka `ASI_METRICS_PATH` jest liczona od katalogu projektu.
 Polecenia testu na próbce w README zapisują i sprawdzają ten sam plik.
 EDA wykonano na pełnych danych, a baseline na pełnych danych i próbce CI.
 
+29.10.2026 wykonano lokalny smoke test przez Codex na świeżym klonie gałęzi,
+z istniejącym środowiskiem `asi-ml` zgodnym z `constraints.txt`. Pobranie danych,
+notebook 02 w nowym kernelu i walidacja zakończyły się poprawnie; wygenerowane
+`metrics.json` jest identyczne z commitowanym. Test próbki CI potwierdził zapis
+w `.pytest_cache/metrics_ci.json` w katalogu głównym repozytorium.
+
 ## Pozostałe potwierdzenia przed zamknięciem sprintu
 
-- [ ] Niezależny smoke test przez osobę inną niż autor baseline:
+- [ ] Potwierdzenie niezależnego smoke testu przez Antona (osobę inną niż autor baseline):
   świeży klon → środowisko → pobranie danych → notebook 02 od zera → metryki.
 - [ ] Zielone CI i akceptacja drugiej osoby dla PR zamykającego integrację.
 
