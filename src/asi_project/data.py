@@ -183,9 +183,8 @@ def normalize_input(df: pd.DataFrame) -> pd.DataFrame:
     - jest idempotentna: ponowne wywołanie nie zmienia wyniku.
 
     Domyślnie przycina białe znaki w wartościach tekstowych i zamienia puste napisy na brak.
-
-
-    albo konwersję typów. Każdą regułę uzasadnij w notebooku 01.
+    Dla Bank Marketing zamienia pdays=-1 (brak wcześniejszego kontaktu) na brak danych.
+    Uzasadnienie reguł znajduje się w notebooku 01.
     """
     normalized = df.copy()
     for column in normalized.columns:
@@ -203,8 +202,6 @@ def filter_training_rows(df: pd.DataFrame, contract: DatasetContract) -> pd.Data
 
     Domyślnie usuwa rekordy bez targetu (nie da się na nich uczyć ani oceniać modelu).
     Funkcja może tylko usuwać rekordy; nie dodaje ich i nie zmienia wartości.
-
-
     Decyzję i jej powód zapisz w notebooku 01.
     """
     keep = df[contract.target].map(label_text).notna()
