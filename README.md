@@ -127,6 +127,27 @@ Najważniejsze pliki Sprintu 1:
 | `docs/architecture.md` | zespół | diagram v0 systemu docelowego |
 | `src/asi_project/datasets.yaml` | prowadząca | kontrakt datasetów — nie edytujemy |
 
+## Kedro — konfiguracja Sprintu 2
+
+W środowisku `asi-ml` zainstaluj przypięte zależności:
+
+```bash
+python -m pip install -r requirements/preflight-s2.txt -c constraints.txt
+kedro info
+kedro registry list
+```
+
+Kontekst Kedro czyta `project.yaml` z katalogu wybranego projektu. Kolejność
+ustawień to: `project.yaml` i kontrakt datasetu → `conf/base` → wybrane środowisko
+(`local` albo `ci`) → parametry CLI. Częściowe nadpisania zachowują pozostałe pola;
+naruszenia kontraktu są odrzucane przed wykonaniem nodów. Jawnie wybrany katalog
+ma pierwszeństwo przed `ASI_PROJECT_ROOT` i bieżącym katalogiem terminala.
+
+Kod używa przenośnych ścieżek; CI sprawdza Linux, Windows i macOS w Pythonie 3.11.
+S2-1 rejestruje pipeline'y, ale ich nody i catalog są jeszcze do uzupełnienia;
+`kedro run` nie trenuje jeszcze modelu. Szczegóły, przykłady nadpisań i testy:
+[konfiguracja i interfejsy Kedro](docs/notes/sprint-2-interfaces.md).
+
 ## Gałęzie, Pull Requesty i review
 
 - Gałąź `main` jest chroniona. Każda zmiana trafia przez gałąź i Pull Request.
