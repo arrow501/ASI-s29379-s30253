@@ -3,7 +3,7 @@
 from typing import Any
 
 from asi_project.config import ConfigError, DatasetContract, ProjectConfig
-from asi_project.data import feature_list_problems
+from asi_project.data import DATA_MODES, feature_list_problems
 
 
 def project_parameters(config: ProjectConfig, contract: DatasetContract) -> dict[str, Any]:
@@ -62,3 +62,32 @@ def validate_project_parameters(params: object, contract: DatasetContract) -> No
         problems.append("project.random_state must be an integer in 0..2**32-1.")
     if problems:
         raise ConfigError("\n".join(problems))
+
+
+def validate_training_parameters(params: object) -> None:
+    """Validate the small supported training surface, including misspelled overrides."""
+    if not isinstance(params, dict):
+        raise ConfigError("training parameters must be a mapping.")
+    unknown = set(params) - {"max_iter"}
+    if unknown:
+        raise ConfigError(f"Unknown training parameters: {sorted(map(str, unknown))}.")
+    max_iter = params.get("max_iter")
+    if isinstance(max_iter, bool) or not isinstance(max_iter, int) or max_iter < 1:
+        raise ConfigError("training.max_iter must be a positive integer.")
+
+
+def validate_reporting_parameters(params: object) -> None:
+    if not isinstance(params, dict):
+        raise ConfigError("reporting parameters must be a mapping.")
+    unknown = set(params) - {"data_mode"}
+    if unknown:
+        raise ConfigError(f"Unknown reporting parameters: {sorted(map(str, unknown))}.")
+    if params.get("data_mode") not in DATA_MODES:
+        raise ConfigError("reporting.data_mode must be 'full' or 'sample'.")
+
+
+def validate_run_parameters(params: dict[str, Any], contract: DatasetContract) -> None:
+    """Check effective settings before Kedro can create any training artifacts."""
+    validate_project_parameters(params.get("project"), contract)
+    validate_training_parameters(params.get("training"))
+    validate_reporting_parameters(params.get("reporting"))

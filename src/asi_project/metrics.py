@@ -4,7 +4,7 @@ import json
 import math
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, Protocol
 
 from sklearn.metrics import (
     accuracy_score,
@@ -14,7 +14,18 @@ from sklearn.metrics import (
     recall_score,
 )
 
-from asi_project.config import DatasetContract, ProjectConfig
+from asi_project.config import DatasetContract
+
+
+class SplitSettings(Protocol):
+    """Metadata needs split values, whether supplied by project.yaml or Kedro."""
+
+    @property
+    def test_size(self) -> float: ...
+
+    @property
+    def random_state(self) -> int: ...
+
 
 SCHEMA_VERSION = 1
 METRIC_NAMES = ("accuracy", "precision", "recall", "f1")
@@ -38,7 +49,7 @@ def compute_metrics(y_true: Sequence[int], y_pred: Sequence[int]) -> dict[str, A
 def build_metrics_record(
     *,
     contract: DatasetContract,
-    config: ProjectConfig,
+    config: SplitSettings,
     features: Sequence[str],
     n_train: int,
     n_test: int,
