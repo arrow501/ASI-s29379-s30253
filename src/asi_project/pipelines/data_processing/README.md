@@ -1,12 +1,13 @@
-# pipelines/data_processing
+# data_processing — przygotowanie danych w Sprincie 2
 
-> Scaffold for Sprint 2 — do not implement before this sprint.
+Za zadanie #11 odpowiada Anton. Fabryka jest na razie pusta.
 
-Pliki, które powstaną w Sprincie 2: definicje nodów i definicja pipeline'u.
+Wejście: `raw_data` i `params:project`. Wyjście: `prepared_data`, które registry
+przekazuje bezpośrednio do `data_science`.
 
-Kontrakt:
+Kolejność: walidacja kontraktu → input normalization → training-only filtering.
+Korzystamy z istniejących helperów w `asi_project.data`. Wynik zachowuje target,
+indeks i kolejność rekordów; nie zawiera dopasowanego preprocessingu.
+Może zostać w pamięci, zapis pod `data/02_intermediate/` jest opcjonalny.
 
-- kolejność: walidacja kontraktu → input normalization → training-only filtering;
-- nody korzystają z istniejących funkcji `validate`, `normalize_input` i `filter_training_rows`
-  (`src/asi_project/data.py`) — bez kopiowania logiki;
-- wyjście: dane gotowe do splitu (warstwa `data/02_intermediate/`, poza gitem).
+[Dokładny kontrakt, wpisy catalogu i komendy odbioru](../../../../docs/notes/sprint-2-handoff.md).
