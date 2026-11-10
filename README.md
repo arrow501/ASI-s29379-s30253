@@ -148,6 +148,29 @@ S2-1 rejestruje pipeline'y, ale ich nody i catalog są jeszcze do uzupełnienia;
 `kedro run` nie trenuje jeszcze modelu. Szczegóły, przykłady nadpisań i testy:
 [konfiguracja i interfejsy Kedro](docs/notes/sprint-2-interfaces.md).
 
+## Visual exploration — marimo (opcjonalne)
+
+To opcjonalne narzędzie poza sylabusem. Nie jest potrzebne do wymaganych notebooków
+ani pipeline'u Kedro. W aktywnym środowisku `asi-ml` pierwsze uruchomienie:
+
+```bash
+python scripts/visual_exploration.py --setup --sample
+```
+
+Jedna komenda instaluje przypięte dodatki, udostępnia lokalny pakiet projektu i
+otwiera marimo na próbce zapisanej w repo — bez pobierania pełnych danych.
+Kolejne uruchomienia: `python scripts/visual_exploration.py`.
+W VS Code dostępne są zadania **ASI: set up visual exploration (optional)**
+i **ASI: visual exploration (marimo, asi-ml)**.
+
+Notebook 03 zawiera PCA z płynną rotacją, hover, zaznaczanie regionów, t-SNE,
+wykresy chronologiczne i boczny spis treści. Używa wcześniejszych 80% danych, bez
+treningu modelu. Bez `--sample` wybiera pełne dane, jeśli są lokalnie dostępne;
+w przeciwnym razie próbkę CI. Serwer nasłuchuje tylko lokalnie.
+Notebooki 01 i 02 pozostają w swoim oryginalnym formacie.
+Instrukcje przejęcia przez marimo-pair i opis matematyki:
+[Visual exploration](docs/notes/visual-exploration.md).
+
 ## Gałęzie, Pull Requesty i review
 
 - Gałąź `main` jest chroniona. Każda zmiana trafia przez gałąź i Pull Request.

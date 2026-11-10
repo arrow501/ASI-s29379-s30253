@@ -15,7 +15,7 @@ dependencies = []
 where = ["src"]
 
 [tool.setuptools.package-data]
-asi_project = ["datasets.yaml"]
+asi_project = ["datasets.yaml", "pca_tour.mjs", "pca_tour.css"]
 
 [tool.kedro]
 package_name = "asi_project"
@@ -38,3 +38,7 @@ select = ["E4", "E7", "E9", "F", "I", "B", "UP"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["asi_project"]
+
+[tool.ruff.lint.per-file-ignores]
+# marimo renders the final expression in each cell.
+"notebooks/03_visual_exploration.py" = ["B018"]

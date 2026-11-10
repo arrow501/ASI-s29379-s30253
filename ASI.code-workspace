@@ -44,6 +44,7 @@
       "ms-python.vscode-pylance",
       "ms-python.debugpy",
       "ms-toolsai.jupyter",
+      "marimo-team.vscode-marimo",
       "charliermarsh.ruff",
       "redhat.vscode-yaml",
       "ms-python.vscode-python-envs"
@@ -52,6 +53,42 @@
   "tasks": {
     "version": "2.0.0",
     "tasks": [
+      {
+        "label": "ASI: set up visual exploration (optional)",
+        "type": "process",
+        "command": "conda",
+        "args": [
+          "run",
+          "--no-capture-output",
+          "-n",
+          "asi-ml",
+          "python",
+          "scripts/visual_exploration.py",
+          "--setup",
+          "--sample"
+        ],
+        "options": {
+          "cwd": "${workspaceFolder:ASI}"
+        },
+        "problemMatcher": []
+      },
+      {
+        "label": "ASI: visual exploration (marimo, asi-ml)",
+        "type": "process",
+        "command": "conda",
+        "args": [
+          "run",
+          "--no-capture-output",
+          "-n",
+          "asi-ml",
+          "python",
+          "scripts/visual_exploration.py"
+        ],
+        "options": {
+          "cwd": "${workspaceFolder:ASI}"
+        },
+        "problemMatcher": []
+      },
       {
         "label": "ASI: check environment",
         "type": "process",
