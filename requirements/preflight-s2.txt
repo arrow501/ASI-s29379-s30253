@@ -3,3 +3,4 @@
 #   python -m pip install -r requirements/preflight-s2.txt -c constraints.txt
 #   kedro info
 kedro==1.7.0
+kedro-datasets[pandas-csvdataset,pickle,json]==10.0.0

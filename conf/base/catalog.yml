@@ -1,2 +1,10 @@
-# Input entries belong to S2-2; output entries belong to S2-3.
-{}
+# Input entries are supplied by S2-2. These are S2-3 outputs.
+trained_model:
+  type: pickle.PickleDataset
+  filepath: data/06_models/baseline.pkl
+
+metrics:
+  type: json.JSONDataset
+  filepath: data/08_reporting/metrics.json
+  save_args:
+    indent: 2

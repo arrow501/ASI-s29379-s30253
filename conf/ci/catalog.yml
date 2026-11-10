@@ -1,2 +1,10 @@
-# S2-2 overrides raw_data here with data/01_raw/sample.csv.
-{}
+# S2-2 supplies raw_data. CI outputs never replace full-data artifacts.
+trained_model:
+  type: pickle.PickleDataset
+  filepath: data/06_models/ci/baseline.pkl
+
+metrics:
+  type: json.JSONDataset
+  filepath: data/08_reporting/ci/metrics.json
+  save_args:
+    indent: 2
