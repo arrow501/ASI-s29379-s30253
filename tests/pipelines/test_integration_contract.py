@@ -130,10 +130,20 @@ def test_standin_preparation_plugs_into_real_science_factory(project, repo_root,
 
 
 @pytest.mark.parametrize(
-    "env,csv_separator", [("ci", ","), ("ci", ";"), ("local", ";"), ("local", ",")]
+    "env,csv_separator,memory_outputs",
+    [
+        ("ci", ",", ()),
+        ("ci", ";", ()),
+        ("local", ";", ()),
+        ("local", ",", ()),
+        ("ci", ",", ("trained_model",)),
+        ("ci", ",", ("metrics",)),
+        ("ci", ",", ("trained_model", "metrics")),
+        ("local", ";", ("trained_model",)),
+    ],
 )
 def test_acceptance_command_runs_real_default_registry_with_fixture_preparation(
-    project, repo_root, tmp_path, monkeypatch, env, csv_separator
+    project, repo_root, tmp_path, monkeypatch, env, csv_separator, memory_outputs
 ):
     """Exercise the acceptance harness; the stand-in is not shipped as production preparation."""
     import yaml
@@ -184,8 +194,18 @@ def test_acceptance_command_runs_real_default_registry_with_fixture_preparation(
         "metrics": {"type": "json.JSONDataset", "filepath": "data/metrics.json"},
     }
     (tmp_path / "conf/base/catalog.yml").write_text(yaml.safe_dump(entries), encoding="utf-8")
+    if memory_outputs:
+        overrides = {name: {"type": "MemoryDataset"} for name in memory_outputs}
+        (tmp_path / "conf" / env / "catalog_overrides.yml").write_text(
+            yaml.safe_dump(overrides), encoding="utf-8"
+        )
     monkeypatch.setattr(checker, "find_repo_root", lambda: tmp_path)
-    if csv_separator == source_separator:
+    if memory_outputs:
+        with pytest.raises(ConfigError, match="persist"):
+            checker.main(["--env", env])
+        assert not (tmp_path / "data/model.pkl").exists()
+        assert not (tmp_path / "data/metrics.json").exists()
+    elif csv_separator == source_separator:
         assert checker.main(["--env", env]) == 0
         assert (tmp_path / "data/model.pkl").is_file()
         assert (tmp_path / "data/metrics.json").is_file()

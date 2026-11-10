@@ -17,7 +17,7 @@ def main(argv=None):
 
     from kedro.framework.session import KedroSession
     from kedro.framework.startup import bootstrap_project
-    from kedro.io import MemoryDataset
+    from kedro.io import DataCatalog, MemoryDataset
     from kedro.runner import SequentialRunner
 
     from asi_project.pipeline_registry import register_pipelines
@@ -41,6 +41,13 @@ def main(argv=None):
         if context.params["reporting"]["data_mode"] != mode:
             raise ConfigError(f"Environment {args.env} must report data_mode={mode!r}.")
         catalog = context.catalog
+        # MemoryDataset entries are omitted by to_config; reject overrides before training.
+        datasets, credentials, load_versions, save_version = catalog.to_config()
+        outputs = {
+            name: datasets[name] for name in ("trained_model", "metrics") if name in datasets
+        }
+        if len(outputs) != 2:
+            raise ConfigError("trained_model and metrics must use persistent catalog datasets.")
         if "raw_data" not in catalog:
             raise ConfigError("Add raw_data in catalog_data_processing.yml for base and ci.")
         raw = catalog.load("raw_data")
@@ -63,8 +70,17 @@ def main(argv=None):
         prepared = catalog.load("prepared_data")
         assert_prepared_data(raw, prepared, contract)
         runner.run(pipelines["__default__"], catalog)
-        record = catalog.load("metrics")
-        model = catalog.load("trained_model")
+        # A fresh catalog must load the artifacts without the runner's in-memory state.
+        persisted = DataCatalog.from_config(
+            outputs,
+            credentials,
+            load_versions={
+                name: version for name, version in load_versions.items() if name in outputs
+            },
+            save_version=save_version,
+        )
+        record = persisted.load("metrics")
+        model = persisted.load("trained_model")
         _, X_test, _, y_test = split_data(prepared, context.params["project"])
         if validate_metrics_record(record, contract):
             raise DataContractError("Integrated metrics fail the existing schema.")

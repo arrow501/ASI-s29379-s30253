@@ -18,7 +18,7 @@ o zwiększeniu limitu iteracji — taki model nie jest zwracany do zapisu.
 
 ## Sprawdzone lokalnie — 10.11.2026
 
-- **176 testów przechodzi**, pre-commit również.
+- **180 testów przechodzi**, pre-commit również.
 - Pipeline działa na próbce i pełnych danych, a zapisany model daje się wczytać
   i odtwarza zapisane metryki.
 - Cały rekord z pełnych danych jest identyczny ze Sprintem 1: 36 168 rekordów
@@ -36,3 +36,7 @@ integracji. Do odbioru pozostają #11, wspólny `kedro run` na pełnych danych i
 oraz review Antona. Konkretne kroki: [handoff S2-2/S2-3](sprint-2-handoff.md).
 Ścieżki wyników i nody: [README data_science](../../src/asi_project/pipelines/data_science/README.md).
 Eksperymenty i wybór modelu należą do Sprintu 3.
+
+Aktualny [graf pipeline’u](../architecture.md#pipeline-kedro--sprint-2) pokazuje też
+oczekującą część #11. Check integracji odrzuca nadpisanie wyjść przez MemoryDataset
+i wczytuje zapisane artefakty przez nowy katalog.

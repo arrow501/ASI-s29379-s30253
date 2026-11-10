@@ -93,8 +93,53 @@ flowchart TB
 Źródłem danych jest UCI Bank Marketing, a reguły targetu, dozwolonych cech i podziału przechowują kontrakty w repozytorium. Input normalization jest wspólne dla treningu i przyszłego API, training-only filtering dotyczy wyłącznie treningu, a preprocessing wymagający `fit()` należy do sklearn `Pipeline`. W Sprincie 1 porównamy `DummyClassifier` i `LogisticRegression` na podziale `time_ordered`, zapisując metryki dla klasy `yes`. Zielone elementy będą istnieć po Sprincie 1, a szare są planowane: pakiet modelu trafi do API, które zwróci do UI wartość `P(y=yes)` i zapisze predykcję w warstwie persistence. Docelowo API i UI zostaną wdrożone w Cloud Run z osobnym sekretem i logami.
 <!-- DIAGRAM-V0:END -->
 
+## Pipeline Kedro — Sprint 2
+
+Stan gałęzi `feat/12-data-science`: trzy nody treningowe są gotowe. Przerywana
+ramka oznacza przygotowanie danych z #11, które czeka na integrację.
+
+```mermaid
+flowchart TB
+    RAW["raw_data<br/>pełny CSV lokalnie / próbka w CI"]
+    DP["data_processing — #11, do integracji<br/>walidacja, normalizacja, filtrowanie"]
+    DATA["prepared_data<br/>granica S2-2 → S2-3"]
+    PROJECT["params:project<br/>kontrakt, cechy, split, seed"]
+    SPLIT["split_data<br/>chronologicznie 80/20"]
+    TRAINSET["X_train, y_train"]
+    TESTSET["X_test, y_test"]
+    TRAIN["train_models<br/>sklearn preprocessing + LogisticRegression<br/>DummyClassifier"]
+    LIMIT["params:training<br/>max_iter"]
+    MODEL["trained_model<br/>pickle: baseline.pkl"]
+    DUMMY["dummy_model<br/>w pamięci"]
+    EVAL["evaluate_models<br/>metryki obu modeli + metadane"]
+    MODE["params:reporting.data_mode<br/>full / sample"]
+    METRICS["metrics<br/>JSON: metrics.json"]
+
+    RAW --> DP --> DATA --> SPLIT
+    PROJECT -.-> SPLIT
+    PROJECT -.-> TRAIN
+    PROJECT -.-> EVAL
+    SPLIT --> TRAINSET --> TRAIN
+    SPLIT --> TESTSET --> EVAL
+    TRAINSET -->|"y_train: liczba rekordów"| EVAL
+    LIMIT -.-> TRAIN
+    TRAIN --> MODEL --> EVAL
+    TRAIN --> DUMMY --> EVAL
+    MODE -.-> EVAL
+    EVAL --> METRICS
+
+    style DP fill:#f5f5f5,stroke:#616161,stroke-dasharray:5 5,color:#111
+```
+
+Preprocessing dopasowuje się tylko na treningu i jest zapisany razem z modelem.
+Wyniki trafiają do `data/06_models/` i `data/08_reporting/`; CI używa podkatalogów
+`ci/`. Check integracji wymaga trwałych wyjść i wczytuje je przez nowy katalog.
+Do czasu podłączenia #11 domyślny DAG nie jest kompletny — szczegóły w
+[handoffie S2-2/S2-3](notes/sprint-2-handoff.md).
+
 ## Historia zmian architektury
 
 | Sprint | Zmiana | Powiązany ADR |
 |---|---|---|
 | S1 | diagram v0 | — |
+| S2 | graf Kedro: granica prepared_data, trening i trwałe wyjścia; #11 czeka na integrację | — |
