@@ -12,6 +12,27 @@
 | `build_issues.py` | generowanie `github_issues/` z `docs/sprints/` |
 | `smoke_datasets.py` | narzędzie prowadzącej: smoke prawdziwych źródeł wszystkich datasetów |
 
+## Sprint 2 — komponent treningowy
+
+`check_data_science.py` uruchamia pipeline treningowy na danych przygotowanych
+istniejącymi helperami S1, sprawdza zapis/odczyt modelu i zgodność predykcji z
+metrykami. Nie zastępuje integracji wejściowego pipeline'u Antona.
+
+```bash
+python scripts/check_data_science.py --data-mode sample
+python scripts/check_data_science.py --data-mode full --compare-baseline
+```
+
+Pełne dane muszą być pobrane; wyniki trafiają do ignorowanych ścieżek catalogu.
+Opcja `--compare-baseline` wymaga pełnych danych i porównuje cały rekord z
+niezmienionym `metrics.json` ze Sprintu 1.
+
+Komenda `python scripts/check_pipeline_integration.py --env ci` sprawdza
+rzeczywisty catalog wejściowy, kontrakt `prepared_data`, cały pipeline domyślny
+oraz ponowny odczyt artefaktów przez nowy katalog. `--env local` sprawdza pełne
+dane. Oba checki zapisują standardowe artefakty wybranego środowiska.
+Szczegóły: `docs/notes/sprint-2-handoff.md`.
+
 ## Future scaffold (Sprinty 3–6)
 
 > Scaffold for Sprints 3–6 — do not implement before these sprints.

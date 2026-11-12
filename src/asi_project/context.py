@@ -6,7 +6,7 @@ from kedro.framework.context import KedroContext
 from omegaconf import OmegaConf
 
 from asi_project.config import get_contract, load_project_config
-from asi_project.config_validation import project_parameters, validate_project_parameters
+from asi_project.config_validation import project_parameters, validate_run_parameters
 
 
 class ValidatedKedroContext(KedroContext):
@@ -21,12 +21,12 @@ class ValidatedKedroContext(KedroContext):
         params = OmegaConf.to_container(
             OmegaConf.merge(defaults, config_loader["parameters"]), resolve=True
         )
-        validate_project_parameters(params.get("project"), contract)
+        validate_run_parameters(params, contract)
         config_loader["parameters"] = params
 
     @property
     def params(self) -> dict[str, Any]:
         params = super().params
         contract = get_contract(load_project_config(self.project_path))
-        validate_project_parameters(params.get("project"), contract)
+        validate_run_parameters(params, contract)
         return params

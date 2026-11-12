@@ -30,6 +30,9 @@ def make_dummy() -> DummyClassifier:
 def build_baseline_pipeline(
     numeric_features: Sequence[str],
     categorical_features: Sequence[str],
+    *,
+    max_iter: int = 1000,
+    random_state: int = 42,
 ) -> Pipeline:
     """Pipeline = model preprocessing (ColumnTransformer) + LogisticRegression.
 
@@ -68,6 +71,6 @@ def build_baseline_pipeline(
     return Pipeline(
         [
             ("preprocessing", preprocessing),
-            ("classifier", LogisticRegression(max_iter=1000, random_state=42)),
+            ("classifier", LogisticRegression(max_iter=max_iter, random_state=random_state)),
         ]
     )

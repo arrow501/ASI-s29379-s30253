@@ -1,3 +1,9 @@
 # The Kedro context supplies defaults from the selected project's project.yaml
 # and immutable dataset registry. Put only intentional overrides in configuration.
 project: {}
+
+training:
+  max_iter: 1000
+
+reporting:
+  data_mode: full

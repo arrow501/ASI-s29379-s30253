@@ -1,7 +1,16 @@
-# Load the full Bank Marketing dataset from a semicolon-separated CSV.
-
+# Full-data input and persisted training outputs.
 raw_data:
   type: pandas.CSVDataset
   filepath: data/01_raw/bank_marketing/bank-full.csv
   load_args:
     sep: ";"
+
+trained_model:
+  type: pickle.PickleDataset
+  filepath: data/06_models/baseline.pkl
+
+metrics:
+  type: json.JSONDataset
+  filepath: data/08_reporting/metrics.json
+  save_args:
+    indent: 2
