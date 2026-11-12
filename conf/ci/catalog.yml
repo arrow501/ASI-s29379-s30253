@@ -1,2 +1,7 @@
-# S2-2 overrides raw_data here with data/01_raw/sample.csv.
-{}
+# Override raw_data with the comma-separated sample for CI runs.
+
+raw_data:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/sample.csv
+  load_args:
+    sep: ","

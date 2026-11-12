@@ -1,2 +1,7 @@
-# Input entries belong to S2-2; output entries belong to S2-3.
-{}
+# Load the full Bank Marketing dataset from a semicolon-separated CSV.
+
+raw_data:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/bank_marketing/bank-full.csv
+  load_args:
+    sep: ";"
