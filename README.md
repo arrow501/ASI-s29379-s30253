@@ -167,9 +167,9 @@ Wyniki są ignorowane przez Git. Referencyjny `metrics.json` z S1 pozostaje bez 
 Pełną integrację i ponowny odczyt zapisanych artefaktów sprawdzisz poleceniem
 `python scripts/check_pipeline_integration.py --env ci` (lub `--env local`).
 
-CI uruchamia testy na Linuxie, Windows i macOS z Pythonem 3.11. Dodanie pełnego
-`kedro run --env ci` do workflow należy do S2-4. Parametry i nadpisania opisuje
-[konfiguracja Kedro](docs/notes/sprint-2-interfaces.md), a granicę obu pipeline’ów
+GitHub Actions uruchamia pre-commit, pytest i `kedro run --env ci` na
+Linuksie, Windowsie i macOS z Pythonem 3.11. Parametry i nadpisania opisuje
+[konfiguracja Kedro](docs/notes/sprint-2-interfaces.md), a połączenie obu pipeline’ów
 [handoff S2-2/S2-3](docs/notes/sprint-2-handoff.md).
 
 ## Gałęzie, Pull Requesty i review
