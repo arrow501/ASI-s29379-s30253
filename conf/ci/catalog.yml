@@ -1,4 +1,10 @@
-# S2-2 supplies raw_data. CI outputs never replace full-data artifacts.
+# CI sample and outputs isolated from full-data artifacts.
+raw_data:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/sample.csv
+  load_args:
+    sep: ","
+
 trained_model:
   type: pickle.PickleDataset
   filepath: data/06_models/ci/baseline.pkl

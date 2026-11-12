@@ -1,4 +1,10 @@
-# Input entries are supplied by S2-2. These are S2-3 outputs.
+# Full-data input and persisted training outputs.
+raw_data:
+  type: pandas.CSVDataset
+  filepath: data/01_raw/bank_marketing/bank-full.csv
+  load_args:
+    sep: ";"
+
 trained_model:
   type: pickle.PickleDataset
   filepath: data/06_models/baseline.pkl
