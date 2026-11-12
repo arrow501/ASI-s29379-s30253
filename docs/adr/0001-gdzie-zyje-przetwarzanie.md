@@ -1,6 +1,6 @@
 # ADR-1: Gdzie odbywa się przetwarzanie danych
 
-- **Status:** proponowany
+- **Status:** przyjęty
 - **Sprint:** S2
 - **Autor:** Anton Sudak (`sanderJa`, s30253)
 - **Recenzent:** Arrow (`arrow501`, s29379)
