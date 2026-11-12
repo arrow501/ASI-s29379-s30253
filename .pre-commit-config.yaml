@@ -8,7 +8,7 @@ repos:
         entry: python scripts/check_project_config.py
         language: system
         pass_filenames: false
-        files: ^(project\.yaml|src/asi_project/datasets\.yaml|scripts/check_project_config\.py|src/asi_project/(config|data)\.py|\.pre-commit-config\.yaml)$
+        files: ^(project\.yaml|src/asi_project/datasets\.yaml|scripts/check_project_config\.py|src/asi_project/(config|config_validation|data)\.py|\.pre-commit-config\.yaml)$
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0

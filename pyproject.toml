@@ -17,6 +17,12 @@ where = ["src"]
 [tool.setuptools.package-data]
 asi_project = ["datasets.yaml"]
 
+[tool.kedro]
+package_name = "asi_project"
+project_name = "ASI Bank Marketing"
+kedro_init_version = "1.7.0"
+source_dir = "src"
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]

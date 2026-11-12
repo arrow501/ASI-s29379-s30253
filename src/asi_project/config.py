@@ -74,8 +74,9 @@ class ProjectConfig:
 
 
 def find_repo_root(start: Path | None = None) -> Path:
-    """Zwraca katalog z ``project.yaml``, idąc w górę od ``start`` (domyślnie: bieżący katalog)."""
-    env_root = os.environ.get("ASI_PROJECT_ROOT")
+    """Find project.yaml from an explicit start, otherwise ASI_PROJECT_ROOT or CWD."""
+    # An explicit caller-selected root wins over ambient shell configuration.
+    env_root = os.environ.get("ASI_PROJECT_ROOT") if start is None else None
     if env_root:
         return Path(env_root).resolve()
     current = (start or Path.cwd()).resolve()
