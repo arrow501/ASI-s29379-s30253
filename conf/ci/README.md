@@ -1,7 +1,17 @@
-# conf/ci
+# conf/ci — konfiguracja Kedro dla CI
 
-> Scaffold for Sprint 2 — do not implement before this sprint.
+Opcja `--env ci` ładuje konfigurację bazową i nakłada na nią ustawienia z tego katalogu.
 
-Nadpisania dla środowiska `ci`: te same pipeline'y uruchamiane na próbce
-`data/01_raw/sample.csv`. Od Sprintu 3 także wyłączenie zewnętrznych usług w CI
-(`WANDB_MODE=disabled`, AutoGluon wyłączony parametrem albo z kilkusekundowym limitem).
+## Próbka danych
+
+[`catalog.yml`](catalog.yml) nadpisuje wpis `raw_data`. Kedro wczytuje `data/01_raw/sample.csv` z separatorem `,`. Próbka jest w repozytorium, więc można uruchomić pipeline bez pobierania pełnych danych:
+
+```bash
+kedro run --pipeline data_processing --env ci
+```
+
+Nazwa wejścia `raw_data` pozostaje taka sama. Dzięki temu `data_processing` wykonuje tę samą walidację, normalizację i filtrowanie na obu źródłach.
+
+## Konfiguracja kolejnych etapów
+
+S2-3 dodaje osobne ścieżki dla modelu i metryk z próbki CI. Od Sprintu 3 konfiguracja CI wyłączy wysyłanie danych do W&B przez `WANDB_MODE=disabled` i pozwoli wyłączyć AutoGluon lub ograniczyć czas jego działania.
