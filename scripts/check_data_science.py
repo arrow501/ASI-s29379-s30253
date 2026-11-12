@@ -4,7 +4,7 @@ import argparse
 
 import numpy as np
 
-from asi_project.config import find_repo_root, get_contract, load_project_config
+from asi_project.config import ConfigError, find_repo_root, get_contract, load_project_config
 from asi_project.data import filter_training_rows, load_dataset, normalize_input
 from asi_project.metrics import compute_metrics, load_metrics, validate_metrics_record
 
@@ -22,7 +22,7 @@ def main(argv=None):
     # Load S2 dependencies only when this optional component check is invoked.
     from kedro.framework.session import KedroSession
     from kedro.framework.startup import bootstrap_project
-    from kedro.io import MemoryDataset
+    from kedro.io import DataCatalog, MemoryDataset
     from kedro.runner import SequentialRunner
 
     from asi_project.pipelines.data_science.nodes import split_data
@@ -39,10 +39,25 @@ def main(argv=None):
     ) as session:
         context = session.load_context()
         catalog = context.catalog
+        # Reject in-memory output overrides before producing any artifacts.
+        datasets, credentials, load_versions, save_version = catalog.to_config()
+        outputs = {
+            name: datasets[name] for name in ("trained_model", "metrics") if name in datasets
+        }
+        if len(outputs) != 2:
+            raise ConfigError("trained_model and metrics must use persistent catalog datasets.")
         catalog["prepared_data"] = MemoryDataset(data=prepared)
         SequentialRunner().run(create_pipeline(), catalog)
-        record = catalog.load("metrics")
-        model = catalog.load("trained_model")
+        persisted = DataCatalog.from_config(
+            outputs,
+            credentials,
+            load_versions={
+                name: version for name, version in load_versions.items() if name in outputs
+            },
+            save_version=save_version,
+        )
+        record = persisted.load("metrics")
+        model = persisted.load("trained_model")
         _, X_test, _, y_test = split_data(prepared, context.params["project"])
         probabilities = model.predict_proba(X_test)
         if (

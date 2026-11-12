@@ -18,7 +18,7 @@ o zwiększeniu limitu iteracji — taki model nie jest zwracany do zapisu.
 
 ## Sprawdzone lokalnie — 10.11.2026
 
-- **180 testów przechodzi**, pre-commit również.
+- **188 testów przechodzi**, pre-commit również.
 - Pipeline działa na próbce i pełnych danych, a zapisany model daje się wczytać
   i odtwarza zapisane metryki.
 - Cały rekord z pełnych danych jest identyczny ze Sprintem 1: 36 168 rekordów
