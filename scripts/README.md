@@ -27,10 +27,11 @@ Pełne dane muszą być pobrane; wyniki trafiają do ignorowanych ścieżek cata
 Opcja `--compare-baseline` wymaga pełnych danych i porównuje cały rekord z
 niezmienionym `metrics.json` ze Sprintu 1.
 
-Po dołączeniu #11 komenda `python scripts/check_pipeline_integration.py --env ci`
-sprawdza rzeczywisty catalog wejściowy, kontrakt `prepared_data` i cały pipeline
-domyślny. Dopóki przygotowanie nie jest zaimplementowane, kończy się kodem 2
-z jawnym komunikatem. Szczegóły: `docs/notes/sprint-2-handoff.md`.
+Komenda `python scripts/check_pipeline_integration.py --env ci` sprawdza
+rzeczywisty catalog wejściowy, kontrakt `prepared_data`, cały pipeline domyślny
+oraz ponowny odczyt artefaktów przez nowy katalog. `--env local` sprawdza pełne
+dane. Oba checki zapisują standardowe artefakty wybranego środowiska.
+Szczegóły: `docs/notes/sprint-2-handoff.md`.
 
 ## Future scaffold (Sprinty 3–6)
 

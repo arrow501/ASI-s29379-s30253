@@ -16,9 +16,9 @@ Walidacja odrzuca błędne ustawienia i literówki, rozjechane indeksy X/y oraz
 niezgodne cechy w modelu i metadanych. Brak zbieżności przerywa trening z komunikatem
 o zwiększeniu limitu iteracji — taki model nie jest zwracany do zapisu.
 
-## Sprawdzone lokalnie — 10.11.2026
+## Sprawdzone lokalnie — 12.11.2026
 
-- **188 testów przechodzi**, pre-commit również.
+- **218 testów przechodzi**, pre-commit również.
 - Pipeline działa na próbce i pełnych danych, a zapisany model daje się wczytać
   i odtwarza zapisane metryki.
 - Cały rekord z pełnych danych jest identyczny ze Sprintem 1: 36 168 rekordów
@@ -31,12 +31,14 @@ python scripts/check_data_science.py --data-mode sample
 python scripts/check_data_science.py --data-mode full --compare-baseline
 ```
 
-Ten check przygotowuje wejście helperami S1, więc nie potwierdza jeszcze pełnej
-integracji. Do odbioru pozostają #11, wspólny `kedro run` na pełnych danych i CI
-oraz review Antona. Konkretne kroki: [handoff S2-2/S2-3](sprint-2-handoff.md).
+Ten check przygotowuje wejście helperami S1. Pełną integrację z przygotowaniem S2-2
+potwierdzają osobne testy rzeczywistych catalogów i fabryk, check integracji oraz
+przebiegi `kedro run` na próbce i pełnych danych. Instrukcja odbioru:
+[handoff S2-2/S2-3](sprint-2-handoff.md).
 Ścieżki wyników i nody: [README data_science](../../src/asi_project/pipelines/data_science/README.md).
 Eksperymenty i wybór modelu należą do Sprintu 3.
 
-Aktualny [graf pipeline’u](../architecture.md#pipeline-kedro--sprint-2) pokazuje też
-oczekującą część #11. Check integracji odrzuca nadpisanie wyjść przez MemoryDataset
-i wczytuje zapisane artefakty przez nowy katalog.
+Aktualny [graf pipeline’u](../architecture.md#pipeline-kedro--sprint-2) pokazuje oba
+połączone pipeline’y. Check integracji odrzuca nadpisanie wyjść przez MemoryDataset
+i wczytuje zapisane artefakty przez nowy katalog. Uruchomienie w GitHub CI,
+ADR-1 i niezależny smoke test świeżej instalacji pozostają w S2-4.

@@ -1,4 +1,4 @@
-"""Verify S2-3 persistence and baseline parity while S2-2 integration is pending."""
+"""Verify training-component persistence and parity with the Sprint 1 baseline."""
 
 import argparse
 

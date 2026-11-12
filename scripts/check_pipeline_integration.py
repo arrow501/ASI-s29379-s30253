@@ -49,7 +49,7 @@ def main(argv=None):
         if len(outputs) != 2:
             raise ConfigError("trained_model and metrics must use persistent catalog datasets.")
         if "raw_data" not in catalog:
-            raise ConfigError("Add raw_data in catalog_data_processing.yml for base and ci.")
+            raise ConfigError("Define raw_data in the base and ci catalogs.")
         raw = catalog.load("raw_data")
         if not isinstance(raw, pd.DataFrame):
             raise DataContractError("raw_data must be a pandas DataFrame; use pandas.CSVDataset.")

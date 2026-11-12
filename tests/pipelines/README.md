@@ -11,6 +11,7 @@ python scripts/check_pipeline_integration.py --env ci
 do testów nodów Antona. `test_integration_contract.py` sprawdza kontrakt i harness
 na jawnie oznaczonym stand-inie; nie zastępuje implementacji `data_processing`.
 
-Komenda integracyjna używa prawdziwych fabryk i kończy się kodem 2, gdy #11
-jeszcze nie jest zaimplementowane. Jej wynik musi być zielony po integracji.
-Krok `kedro run --env ci` w workflow należy do S2-4.
+`test_catalog_integration.py` kopiuje konfigurację base/ci do tymczasowego projektu,
+wczytuje różne pliki CSV dla obu środowisk i sprawdza rzeczywiste fabryki oraz
+zapis/odczyt artefaktów. Nie dziedziczy lokalnych nadpisań ani nie zapisuje poza
+tymczasowym projektem. Krok `kedro run --env ci` w workflow należy do S2-4.

@@ -39,8 +39,9 @@ kedro registry list
 pytest -q
 ```
 
-`kedro run` uruchomi całość po dołączeniu przygotowania danych z #11.
-Sama obecność nazw w registry nie potwierdza gotowej integracji.
+`kedro run` uruchamia przygotowanie i trening na pełnych danych, a
+`kedro run --env ci` korzysta z próbki. Setup i ścieżki wyników:
+[Kedro quickstart](../../README.md#kedro-quickstart--sprint-2).
 
 CI jest skonfigurowane dla Linuxa, Windows i macOS z Pythonem 3.11. Lokalna
 weryfikacja na Linuxie nie zastępuje wyników pozostałych runnerów. Testy obejmują

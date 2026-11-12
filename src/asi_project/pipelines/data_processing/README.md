@@ -1,6 +1,8 @@
 # data_processing — przygotowanie danych w Sprincie 2
 
-Za zadanie #11 odpowiada Anton. Fabryka jest na razie pusta.
+Za zadanie #11 odpowiada Anton. Fabryka łączy `validate_data`, `normalize_data`
+i `filter_data`; wejście CSV jest zdefiniowane w `conf/base/catalog.yml`
+i nadpisane dla próbki w `conf/ci/catalog.yml`.
 
 Wejście: `raw_data` i `params:project`. Wyjście: `prepared_data`, które registry
 przekazuje bezpośrednio do `data_science`.

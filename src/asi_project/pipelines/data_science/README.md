@@ -26,8 +26,9 @@ python scripts/check_data_science.py --data-mode full --compare-baseline
 ```
 
 To sprawdzenie komponentu zapisuje standardowe artefakty catalogu. Pełne dane
-muszą być wcześniej pobrane. Wspólny `kedro run` wymaga jeszcze przygotowania z #11;
-uruchomienie tylko `data_science` wymaga dostępnego `prepared_data` w catalogu.
+muszą być wcześniej pobrane. Wspólny `kedro run` wykonuje przygotowanie i trening;
+`kedro run --env ci` używa próbki. Uruchomienie tylko `data_science` wymaga
+dostępnego `prepared_data` w catalogu.
 
 [Wyniki lokalne](../../../../docs/notes/sprint-2-data-science.md) ·
 [Instrukcja integracji dla Antona](../../../../docs/notes/sprint-2-handoff.md)

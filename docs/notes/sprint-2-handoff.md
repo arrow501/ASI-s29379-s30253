@@ -7,22 +7,22 @@ z fundamentu S2-1. Registry już je składa — wystarczy zachować poniższe na
 raw_data + params:project → data_processing → prepared_data → data_science
 ```
 
-## Co dopisuje Anton
+## Pliki połączonego pipeline’u
 
 | Plik | Zawartość |
 | --- | --- |
 | `pipelines/data_processing/nodes.py` w `src/asi_project/` | Nody korzystające z walidacji, normalizacji i filtrowania z S1 |
 | `pipelines/data_processing/pipeline.py` | Niepusta fabryka `create_pipeline(**kwargs)` |
-| `conf/base/catalog_data_processing.yml` | Wejście `raw_data` dla pełnych danych |
-| `conf/ci/catalog_data_processing.yml` | Nadpisanie `raw_data` dla próbki |
+| `conf/base/catalog.yml` | Wejście `raw_data` dla pełnych danych |
+| `conf/ci/catalog.yml` | Nadpisanie `raw_data` dla próbki |
 | `tests/pipelines/` | Testy własnych nodów |
 
-Osobne pliki catalogu pozwalają nie ruszać wpisów wyjściowych Arrow.
-Kedro znajduje `catalog*.yml` automatycznie. `raw_data` definiujemy tylko raz
+Catalog zawiera wejście `raw_data` oraz wyjścia treningu `trained_model` i `metrics`.
+Przy scalaniu zachowujemy oba zestawy wpisów. `raw_data` definiujemy tylko raz
 w danym środowisku. Wspólne nazwy datasetów zostają bez namespace; nazwy wewnętrznych
 nodów są dowolne, byle nie kolidowały z `split_data`, `train_models`, `evaluate_models`.
 
-Wpis do `conf/base/catalog_data_processing.yml`:
+Wpis do `conf/base/catalog.yml`:
 
 ```yaml
 raw_data:
@@ -32,7 +32,7 @@ raw_data:
     sep: ";"
 ```
 
-Wpis do `conf/ci/catalog_data_processing.yml`:
+Wpis do `conf/ci/catalog.yml`:
 
 ```yaml
 raw_data:
@@ -89,7 +89,7 @@ Checker sprawdza źródło CSV, kontrakt przygotowania, rzeczywisty pipeline dom
 wczytanie modelu i zgodność metryk. Przygotowanie uruchamia dwa razy: do kontroli
 wyniku i w pełnym przebiegu. Trening uruchamia raz; wyniki trafiają do catalogu.
 
-Dopóki #11 jest puste, komenda kończy się **kodem 2** z jawnym komunikatem.
-Testowa implementacja zastępcza sprawdza sam mechanizm integracji, nie oznacza
-ukończenia przygotowania. Check komponentu treningowego też nie zastępuje tego odbioru.
-Uruchomienie w CI i smoke test na świeżym klonie pozostają w S2-4.
+Przygotowanie S2-2 jest podłączone do treningu S2-3. Testowy stand-in służy do
+sprawdzania błędów kontraktu; rzeczywiste fabryki i catalog obejmuje osobny test
+integracyjny. Uruchomienie w GitHub CI i niezależny smoke test na świeżym klonie
+pozostają w S2-4.

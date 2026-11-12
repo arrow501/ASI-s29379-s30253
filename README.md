@@ -127,11 +127,14 @@ Najważniejsze pliki Sprintu 1:
 | `docs/architecture.md` | zespół | diagram v0 systemu docelowego |
 | `src/asi_project/datasets.yaml` | prowadząca | kontrakt datasetów — nie edytujemy |
 
-## Kedro — konfiguracja Sprintu 2
+## Kedro quickstart — Sprint 2
 
-W środowisku `asi-ml` zainstaluj przypięte zależności:
+Polecenia wykonuj z katalogu repozytorium, po utworzeniu środowiska `asi-ml`
+zgodnie z [instrukcją środowiska](#start-sprintu-1). Zainstaluj pakiet i zależności:
 
 ```bash
+conda activate asi-ml
+python -m pip install --no-deps -e .
 python -m pip install -r requirements/preflight-s2.txt -c constraints.txt
 kedro info
 kedro registry list
@@ -143,10 +146,31 @@ ustawień to: `project.yaml` i kontrakt datasetu → `conf/base` → wybrane śr
 naruszenia kontraktu są odrzucane przed wykonaniem nodów. Jawnie wybrany katalog
 ma pierwszeństwo przed `ASI_PROJECT_ROOT` i bieżącym katalogiem terminala.
 
-Kod używa przenośnych ścieżek; CI sprawdza Linux, Windows i macOS w Pythonie 3.11.
-S2-1 rejestruje pipeline'y, ale ich nody i catalog są jeszcze do uzupełnienia;
-`kedro run` nie trenuje jeszcze modelu. Szczegóły, przykłady nadpisań i testy:
-[konfiguracja i interfejsy Kedro](docs/notes/sprint-2-interfaces.md).
+Pełny pipeline wykonuje przygotowanie danych, chronologiczny split 80/20, trening
+LogisticRegression i dummy oraz zapis modelu i metryk. Notebook nie jest wymagany.
+
+```bash
+# Próbka jest w repozytorium; pełne dane nie są potrzebne.
+kedro run --env ci
+
+# Pełne dane Bank Marketing pobierane ze źródła zapisanego w kontrakcie.
+python scripts/download_data.py
+kedro run
+```
+
+| Tryb | Model wraz z preprocessingiem | Metryki |
+| --- | --- | --- |
+| `local` (domyślny) | `data/06_models/baseline.pkl` | `data/08_reporting/metrics.json` |
+| `ci` | `data/06_models/ci/baseline.pkl` | `data/08_reporting/ci/metrics.json` |
+
+Wyniki są ignorowane przez Git. Referencyjny `metrics.json` z S1 pozostaje bez zmian.
+Pełną integrację i ponowny odczyt zapisanych artefaktów sprawdzisz poleceniem
+`python scripts/check_pipeline_integration.py --env ci` (lub `--env local`).
+
+CI uruchamia testy na Linuxie, Windows i macOS z Pythonem 3.11. Dodanie pełnego
+`kedro run --env ci` do workflow należy do S2-4. Parametry i nadpisania opisuje
+[konfiguracja Kedro](docs/notes/sprint-2-interfaces.md), a granicę obu pipeline’ów
+[handoff S2-2/S2-3](docs/notes/sprint-2-handoff.md).
 
 ## Gałęzie, Pull Requesty i review
 

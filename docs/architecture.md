@@ -95,13 +95,17 @@ flowchart TB
 
 ## Pipeline Kedro — Sprint 2
 
-Stan gałęzi `feat/12-data-science`: trzy nody treningowe są gotowe. Przerywana
-ramka oznacza przygotowanie danych z #11, które czeka na integrację.
+Domyślny pipeline łączy trzy nody przygotowania S2-2 z trzema nodami treningu S2-3.
 
 ```mermaid
 flowchart TB
     RAW["raw_data<br/>pełny CSV lokalnie / próbka w CI"]
-    DP["data_processing — #11, do integracji<br/>walidacja, normalizacja, filtrowanie"]
+    subgraph DP["data_processing — S2-2"]
+        VALIDATE["validate_data<br/>walidacja kontraktu"]
+        NORMALIZE["normalize_data<br/>input normalization"]
+        FILTER["filter_data<br/>training-only filtering"]
+        VALIDATE --> NORMALIZE --> FILTER
+    end
     DATA["prepared_data<br/>granica S2-2 → S2-3"]
     PROJECT["params:project<br/>kontrakt, cechy, split, seed"]
     SPLIT["split_data<br/>chronologicznie 80/20"]
@@ -115,7 +119,10 @@ flowchart TB
     MODE["params:reporting.data_mode<br/>full / sample"]
     METRICS["metrics<br/>JSON: metrics.json"]
 
-    RAW --> DP --> DATA --> SPLIT
+    RAW --> VALIDATE
+    FILTER --> DATA --> SPLIT
+    PROJECT -.-> VALIDATE
+    PROJECT -.-> FILTER
     PROJECT -.-> SPLIT
     PROJECT -.-> TRAIN
     PROJECT -.-> EVAL
@@ -128,13 +135,12 @@ flowchart TB
     MODE -.-> EVAL
     EVAL --> METRICS
 
-    style DP fill:#f5f5f5,stroke:#616161,stroke-dasharray:5 5,color:#111
 ```
 
 Preprocessing dopasowuje się tylko na treningu i jest zapisany razem z modelem.
 Wyniki trafiają do `data/06_models/` i `data/08_reporting/`; CI używa podkatalogów
 `ci/`. Check integracji wymaga trwałych wyjść i wczytuje je przez nowy katalog.
-Do czasu podłączenia #11 domyślny DAG nie jest kompletny — szczegóły w
+Kontrakt połączenia i komendy odbioru są w
 [handoffie S2-2/S2-3](notes/sprint-2-handoff.md).
 
 ## Historia zmian architektury
@@ -142,4 +148,4 @@ Do czasu podłączenia #11 domyślny DAG nie jest kompletny — szczegóły w
 | Sprint | Zmiana | Powiązany ADR |
 |---|---|---|
 | S1 | diagram v0 | — |
-| S2 | graf Kedro: granica prepared_data, trening i trwałe wyjścia; #11 czeka na integrację | — |
+| S2 | połączony graf Kedro: przygotowanie, trening i trwałe wyjścia | — |
