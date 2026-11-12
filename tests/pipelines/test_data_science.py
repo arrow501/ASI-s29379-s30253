@@ -1,6 +1,5 @@
 """Regression tests for the prepared_data → persisted baseline boundary."""
 
-from copy import deepcopy
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -118,29 +117,20 @@ def test_evaluation_uses_effective_metadata_and_existing_schema(prepared, params
 
 
 @pytest.mark.parametrize("env", ["local", "ci"])
-@pytest.mark.parametrize("absolute_override", [False, True])
-def test_real_runner_writes_reloadable_model_and_json(
-    prepared, params, repo_root, tmp_path, env, absolute_override
-):
+def test_real_runner_writes_reloadable_model_and_json(prepared, params, repo_root, tmp_path, env):
     bootstrap_project(repo_root)
     with KedroSession.create(project_path=repo_root, env=env) as session:
         context = session.load_context()
         run_params = context.params
-        entries = {
-            name: deepcopy(context.config_loader["catalog"][name])
-            for name in ("trained_model", "metrics")
-        }
-    originals = []
-    if absolute_override:
-        for name, entry in entries.items():
-            original = tmp_path / "existing_artifacts" / name / Path(entry["filepath"]).name
-            original.parent.mkdir(parents=True)
-            original.write_bytes(b"existing artifact must not change")
-            entry["filepath"] = str(original)
-            originals.append(original)
-    for name, entry in entries.items():
-        # Absolute paths from local overrides must never escape the test output directory.
-        entry["filepath"] = str(tmp_path / name / Path(entry["filepath"]).name)
+    # Persistence behavior is independent of a collaborator's output configuration.
+    # The tracked catalog itself is exercised in test_catalog_integration.py.
+    entries = {
+        "trained_model": {
+            "type": "pickle.PickleDataset",
+            "filepath": str(tmp_path / "baseline.pkl"),
+        },
+        "metrics": {"type": "json.JSONDataset", "filepath": str(tmp_path / "metrics.json")},
+    }
     catalog = DataCatalog.from_config(entries)
     for name, value in {
         "prepared_data": prepared,
@@ -150,8 +140,6 @@ def test_real_runner_writes_reloadable_model_and_json(
     }.items():
         catalog[name] = MemoryDataset(data=value)
     SequentialRunner().run(create_pipeline(), catalog)
-    for original in originals:
-        assert original.read_bytes() == b"existing artifact must not change"
     # A fresh catalog must load real files, rather than reuse runner state.
     assert Path(entries["trained_model"]["filepath"]).is_file()
     assert Path(entries["metrics"]["filepath"]).is_file()

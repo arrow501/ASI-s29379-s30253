@@ -12,13 +12,39 @@ from kedro.runner import SequentialRunner
 from asi_project.config import ConfigError, load_registry
 from asi_project.config_validation import project_parameters
 from asi_project.data import DataContractError, filter_training_rows, normalize_input
-from asi_project.pipelines.contracts import assert_pipeline_wiring, assert_prepared_data
+from asi_project.pipelines.contracts import (
+    assert_baseline_not_output,
+    assert_pipeline_wiring,
+    assert_prepared_data,
+)
 from asi_project.pipelines.data_science.pipeline import create_pipeline
 
 
 def _fixture_preparation(raw, project):
     """Test stand-in only; production data_processing remains owned by S2-2."""
     return filter_training_rows(normalize_input(raw), load_registry()[project["dataset_id"]])
+
+
+@pytest.mark.parametrize("alias", ["path", "file_uri", "relative", "hardlink"])
+def test_output_guard_rejects_baseline_alias_before_writing(tmp_path, monkeypatch, alias):
+    baseline = tmp_path / "metrics.json"
+    baseline.write_bytes(b"original reference")
+    filepath = str(baseline)
+    if alias == "file_uri":
+        filepath = baseline.as_uri()
+    elif alias == "relative":
+        monkeypatch.chdir(tmp_path)
+        filepath = "metrics.json"
+    elif alias == "hardlink":
+        linked = tmp_path / "linked.json"
+        try:
+            linked.hardlink_to(baseline)
+        except OSError:
+            pytest.skip("Hard links are unavailable on this filesystem.")
+        filepath = str(linked)
+    with pytest.raises(ConfigError, match="baseline"):
+        assert_baseline_not_output({"metrics": {"filepath": filepath}}, baseline)
+    assert baseline.read_bytes() == b"original reference"
 
 
 def _load_checker(repo_root):

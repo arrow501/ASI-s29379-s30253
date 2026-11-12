@@ -25,12 +25,14 @@ def main(argv=None):
     from kedro.io import DataCatalog, MemoryDataset
     from kedro.runner import SequentialRunner
 
+    from asi_project.pipelines.contracts import assert_baseline_not_output
     from asi_project.pipelines.data_science.nodes import split_data
     from asi_project.pipelines.data_science.pipeline import create_pipeline
 
     root = find_repo_root()
     config = load_project_config(root)
     contract = get_contract(config)
+    baseline = load_metrics(config.metrics_path) if args.compare_baseline else None
     raw = load_dataset(config, contract, mode=args.data_mode)
     prepared = filter_training_rows(normalize_input(raw), contract)
     bootstrap_project(root)
@@ -38,6 +40,8 @@ def main(argv=None):
         project_path=root, env="ci" if args.data_mode == "sample" else "local"
     ) as session:
         context = session.load_context()
+        if context.params["reporting"]["data_mode"] != args.data_mode:
+            raise ConfigError(f"Selected environment must report data_mode={args.data_mode!r}.")
         catalog = context.catalog
         # Reject in-memory output overrides before producing any artifacts.
         datasets, credentials, load_versions, save_version = catalog.to_config()
@@ -46,6 +50,7 @@ def main(argv=None):
         }
         if len(outputs) != 2:
             raise ConfigError("trained_model and metrics must use persistent catalog datasets.")
+        assert_baseline_not_output(outputs, config.metrics_path)
         catalog["prepared_data"] = MemoryDataset(data=prepared)
         SequentialRunner().run(create_pipeline(), catalog)
         persisted = DataCatalog.from_config(
@@ -63,6 +68,7 @@ def main(argv=None):
         if (
             probabilities.shape != (len(X_test), 2)
             or not np.isfinite(probabilities).all()
+            or not np.all((probabilities >= 0) & (probabilities <= 1))
             or not np.allclose(probabilities.sum(axis=1), 1)
         ):
             raise ValueError("Reloaded model did not produce valid binary probabilities.")
@@ -74,7 +80,7 @@ def main(argv=None):
         ):
             raise ValueError("Reloaded model predictions do not reproduce persisted metrics.")
         if args.compare_baseline:
-            if record != load_metrics(config.metrics_path):
+            if record != baseline:
                 raise ValueError("Full-data output differs from the tracked Sprint 1 baseline.")
             print("Full metric record exactly matches Sprint 1.")
         print(f"OK: {args.data_mode} component run, persisted model reload and metric parity.")

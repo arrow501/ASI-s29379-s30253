@@ -21,7 +21,11 @@ def main(argv=None):
     from kedro.runner import SequentialRunner
 
     from asi_project.pipeline_registry import register_pipelines
-    from asi_project.pipelines.contracts import assert_pipeline_wiring, assert_prepared_data
+    from asi_project.pipelines.contracts import (
+        assert_baseline_not_output,
+        assert_pipeline_wiring,
+        assert_prepared_data,
+    )
     from asi_project.pipelines.data_science.nodes import split_data
 
     root = find_repo_root()
@@ -48,6 +52,7 @@ def main(argv=None):
         }
         if len(outputs) != 2:
             raise ConfigError("trained_model and metrics must use persistent catalog datasets.")
+        assert_baseline_not_output(outputs, config.metrics_path)
         if "raw_data" not in catalog:
             raise ConfigError("Define raw_data in the base and ci catalogs.")
         raw = catalog.load("raw_data")

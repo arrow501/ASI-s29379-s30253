@@ -1,6 +1,9 @@
 """Executable handoff contracts shared by the two Sprint 2 pipeline owners."""
 
+from pathlib import Path
+
 import pandas as pd
+from kedro.io.core import get_protocol_and_path
 
 from asi_project.config import ConfigError, DatasetContract
 from asi_project.data import (
@@ -10,6 +13,23 @@ from asi_project.data import (
     normalize_column_names,
     normalize_input,
 )
+
+
+def assert_baseline_not_output(outputs: dict, baseline_path: Path) -> None:
+    """Reject local catalog outputs that would replace the Sprint 1 reference."""
+    baseline = baseline_path.resolve()
+    for name, entry in outputs.items():
+        filepath = entry.get("filepath")
+        if filepath is None:
+            continue
+        protocol, path = get_protocol_and_path(str(filepath))
+        if protocol != "file":
+            continue
+        output = Path(path).resolve()
+        if output == baseline or (
+            output.exists() and baseline.exists() and output.samefile(baseline)
+        ):
+            raise ConfigError(f"{name} must not overwrite the Sprint 1 baseline: {baseline}.")
 
 
 def assert_pipeline_wiring(pipelines) -> None:
