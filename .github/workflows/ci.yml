@@ -64,6 +64,9 @@ jobs:
       - name: pytest
         run: pytest
 
+      - name: Kedro na próbce CI
+        run: kedro run --env ci
+
       - name: Stan projektu
         id: status
         run: python scripts/project_status.py | tee -a "$GITHUB_OUTPUT"
@@ -83,7 +86,6 @@ jobs:
         run: python scripts/check_dod.py --sprint 1
 
       # Future scaffold — kroki kolejnych sprintów (nieaktywne, dopisywane na starcie sprintu):
-      # S2: kedro run --env ci (pipeline'y na próbce CI) i testy nodów (tests/pipelines/)
       # S3: WANDB_MODE=disabled, test zapisu i odczytu pakietu modelu
       # S4: testy API (tests/api/) bez prawdziwego modelu i bez prawdziwej bazy
       # S6 (OPTIONAL): deploy z CI jako osobny workflow
