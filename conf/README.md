@@ -1,9 +1,6 @@
 # conf/ — konfiguracja Kedro
 
-> Scaffold for Sprint 2 — do not implement before this sprint.
-
-Katalog wypełnia się w Sprincie 2, gdy projekt przechodzi z notebooka na pipeline Kedro.
-W Sprincie 1 nic tu nie konfigurujemy.
+Wspólna konfiguracja działających pipeline’ów Kedro oraz lokalnych eksperymentów S3.
 
 | Katalog | Sprint | Rola |
 |---|---|---|
@@ -17,5 +14,7 @@ Kontrakt (z planu Sprintu 2):
 - `kedro run --env ci` — próbka CI (`base` + `ci`), uruchamiane w GitHub Actions;
 - kod pipeline'ów nie zna ścieżek do plików — ścieżki i parametry są w konfiguracji.
 
-Pliki konfiguracyjne i ustawienia projektu Kedro w `pyproject.toml` dodaje PR referencyjny
-na starcie Sprintu 2. Przypięta wersja Kedro: `requirements/preflight-s2.txt`.
+Parametry modeli i limity: `base/parameters_experiments.yml`; liczby foldów:
+`base/parameters_validation_protocols.yml`. `ci` wyłącza AutoGluona. Proporcje splitu,
+cechy i seed nadal pochodzą z `project.yaml`. Przypięta wersja Kedro:
+`requirements/preflight-s2.txt`.

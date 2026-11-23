@@ -10,12 +10,28 @@ import pytest
 from asi_project.config import ConfigError
 from asi_project.config_validation import project_parameters
 from asi_project.data import DataContractError, normalize_input
-from asi_project.pipelines.experiments.cross_validation import (
-    _check_protocols,
-    chronological_folds,
-    run_cross_validation,
-)
-from asi_project.pipelines.experiments.nodes import evaluate_frozen_experiments
+from asi_project.pipelines.experiments.cross_validation import train_cross_validated_models
+from asi_project.pipelines.experiments.evaluation import evaluate_test, freeze_selection
+from asi_project.pipelines.experiments.settings import validate_protocol_settings
+from asi_project.pipelines.experiments.splits import chronological_folds, prepare_cross_validation
+
+
+def train_protocol(
+    prepared_data,
+    raw_data,
+    project,
+    training,
+    experiments,
+    protocols,
+    data_mode,
+    store,
+    *,
+    protocol,
+):
+    X, y, plan = prepare_cross_validation(prepared_data, project, protocols, protocol=protocol)
+    return train_cross_validated_models(
+        X, y, plan, raw_data, project, training, experiments, protocols, data_mode, store
+    )
 
 
 def test_forward_folds_have_known_boundaries_and_never_train_on_future():
@@ -47,7 +63,7 @@ def test_impossible_or_malformed_folds_fail_clearly(rows, fraction, folds):
 )
 def test_protocol_settings_reject_unknown_or_invalid_counts(settings):
     with pytest.raises(ConfigError):
-        _check_protocols(settings)
+        validate_protocol_settings(settings)
 
 
 @pytest.mark.parametrize("protocol", ["bagged", "chronological"])
@@ -70,7 +86,7 @@ def test_real_baseline_protocol_ignores_test_labels_and_refits_only_development(
         raw = data.copy()
         if flipped:
             raw.loc[raw.index[80:], "y"] = ["yes", "no"] * 10
-        report = run_cross_validation(
+        report = train_protocol(
             raw,
             raw,
             parameters,
@@ -88,14 +104,21 @@ def test_real_baseline_protocol_ignores_test_labels_and_refits_only_development(
         # A known category only in test must not appear in any fitted encoder.
         assert "only_in_test" not in str(categorical.named_steps["encoder"].categories_)
         numeric = model.named_steps["preprocessing"].named_transformers_["numeric"]
-        expected = raw.iloc[:80][parameters["numeric_features"]].median().fillna(0).to_numpy(float)
+        training_data = raw.iloc[:80]
+        expected = np.array(
+            [
+                training_data[name].dropna().median() if training_data[name].notna().any() else 0
+                for name in parameters["numeric_features"]
+            ],
+            dtype=float,
+        )
         np.testing.assert_allclose(numeric.named_steps["imputer"].statistics_, expected)
         assert len(result["fold_f1"]) == (3 if protocol == "chronological" else 1)
         assert result["selection_score"] == np.mean(result["fold_f1"])
         oof = json.loads((Path(report["run_dir"]) / "baseline_oof.json").read_text())
         expected_positions = list(range(32, 80)) if protocol == "chronological" else list(range(80))
         assert sorted(oof["indices"]) == sorted(raw.index[expected_positions].tolist())
-        tested = evaluate_frozen_experiments(raw, raw, parameters, report)
+        tested = evaluate_test(raw, raw, parameters, freeze_selection(report))
         assert tested["n_test"] == 20 and tested["test_used_for_selection"] is False
         decisions.append(
             (tested["selected_candidate"], tested["decision_threshold"], result["fold_f1"])
@@ -114,7 +137,7 @@ def test_fold_with_missing_class_fails_before_creating_outputs(project, tmp_path
         "candidates": [{"name": "gbm", "time_limit": 10, "hyperparameters": {"GBM": {}}}],
     }
     with pytest.raises(DataContractError, match="both classes"):
-        run_cross_validation(
+        train_protocol(
             data,
             data,
             project_parameters(project.config, project.contract),

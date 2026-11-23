@@ -1,176 +1,157 @@
 # Sprint 3 — eksperymenty lokalne (#18)
 
-Owner: Arrow; review: Anton. Pipeline `experiments` działa bez W&B, konta i sieci.
-Domyślny pipeline S2 i jego referencyjne `metrics.json` zachowują split 80/20.
+Owner: Arrow; review: Anton. Zakres obejmuje trening i lokalne raporty bez W&B,
+kont i sieci. Publikacja runów W&B pozostaje osobnym brakującym elementem #18.
+Domyślny `kedro run` nadal odtwarza baseline S2 (80/20); eksperymenty są osobnymi pipeline’ami.
 
-## Aktywne warianty porównania
+## Trzy aktywne protokoły
 
-W każdym wariancie wspólny test to ostatnie 20% danych. 70/15/15 wycofano z aktywnego
-porównania; stare wyniki pozostają archiwalne.
+Wspólny test to końcowe 20%: 9043 rekordy. `project.yaml` jest źródłem cech, seeda
+i proporcji splitu. Zachowujemy kolejność i indeks; nie sortujemy po indeksie.
+70/15/15 wycofano z aktywnego porównania. Archiwalne wyniki lokalne pozostają na dysku.
 
-| Wariant | Dobór modelu i progu | Finalny trening |
+| Pipeline | Wybór konfiguracji i progu | Model końcowy |
 | --- | --- | --- |
-| 64/16/20 | chronologiczne validation 16% | pierwsze 64% |
-| 80/20 bagged | losowe, stratyfikowane OOF w pierwszych 80% | bagging na pierwszych 80%; baseline refit na 80% |
-| crossfold chronologiczny | trzy rozszerzające się foldy wewnątrz pierwszych 80% | baseline na 80%; AutoGluon refit ostatniego foldu na 80% |
+| `experiments` | holdout: 28 934 train / 7234 validation | dopasowany na 64% |
+| `experiments_bagged` | 5 losowych foldów stratyfikowanych w pierwszych 80%, pooled OOF F1 | bagging; baseline refit na 80% |
+| `experiments_crossfold` | 3 rozszerzające się okna, średnie F1 okien | refit na 80% |
 
-Crossfold ma nominalne okna: train 0–32% → validation 32–48%, train 0–48% → validation
-48–64%, train 0–64% → validation 64–80%. Dokładne granice pozycyjne i indeksy są
-w `folds.json`. Preprocessing i early stopping korzystają tylko z odpowiedniego foldu;
-progi pochodzą ze złączonych predykcji kolejnych okien. Konfigurację wybieramy według
-średniego F1 okien przy tym progu; raportujemy również każde okno, minimum i odchylenie.
-Wyniki validation po doborze progu pozostają wynikami selekcji, nie niezależnym testem.
+Crossfold ma nominalne granice: train 0–32% → validation 32–48%, train 0–48% →
+validation 48–64%, train 0–64% → validation 64–80%. Prawy kraniec jest wyłączny.
+Preprocessing dopasowuje się tylko na train foldu. W AutoGluonie jawnie prefituje się
+generator cech, aby domyślnie nie analizował także `tuning_data`.
+Po walidacji ostatni wybrany model i jego zależności są refitowane na całym development.
 
-Bagging ma pięć losowych foldów, jeden zestaw baggingu i brak stackingu. RF/XT mogą
-użyć natywnego OOB zamiast pięciu kopii. AutoGluon współdzieli generator cech wewnątrz
-development; ten OOF miesza okresy i nie zastępuje oceny chronologicznej.
-Liczby foldów pochodzą z `conf/base/parameters_validation_protocols.yml`.
+Bagging miesza okresy wewnątrz pierwszych 80%. AutoGluon współdzieli generator cech
+wewnątrz development; RF/XT mogą używać natywnego OOB. Ten OOF nie jest oceną
+prognozowania przyszłego okresu. Nie porównujemy go wprost ze score’em chronologicznych okien.
 
-Pełne przebiegi potwierdzono dla obu nowych protokołów. Na wspólnym teście 9043 rekordów
-model wybrany przez bagging (`tree_ensemble`) ma F1 0,4976; wybrany przez crossfold
-baseline ma F1 0,5210. Dla porównania wybór z pojedynczego 64/16/20 ma F1 0,1737.
-Aktywna tabela wszystkich modeli: `data/08_reporting/experiments/active-comparison.md`,
-źródła i progi: `active-comparison.json` obok. Wszystkie trzy warianty używają tego
-samego fingerprintu i końcowego testu 20%; ten test był już wcześniej oglądany.
-Po dodaniu protokołów przeszło 278 testów, lint, format, `git diff --check`, `pip check`
-oraz oba nowe pipeline'y na próbce CI bez AutoGluona.
+## Jawne etapy pipeline’u
 
-```bash
-# Bagging, wybór na OOF i końcowy test:
-KEDRO_DISABLE_TELEMETRY=1 kedro run --pipelines experiments_bagged_test
-
-# Trzy foldy chronologiczne, refit na development i końcowy test:
-KEDRO_DISABLE_TELEMETRY=1 kedro run --pipelines experiments_crossfold_test
+```mermaid
+flowchart LR
+    A[raw_data] --> B[walidacja, normalizacja, filtrowanie]
+    B --> C[podział holdout albo plan foldów]
+    C --> D[trening i walidacja; refit dla CV]
+    D --> E[wybór modelu i zamrożenie wszystkich progów]
+    E --> F[opcjonalny końcowy test]
 ```
 
-Bez sufiksu `_test` oba polecenia kończą się na walidacji i zapisie modeli. Dodanie
-`--env ci` wykonuje je na próbce, tylko dla baseline'u (bez SDK AutoGluona i W&B).
-Każdy `time_limit` obowiązuje pojedynczy `fit`, więc crossfold może zużyć trzy takie
-budżety na konfigurację. Końcowy `refit_full` AutoGluona jest poza limitem `fit`;
-odtwarza liczbę iteracji wybranego modelu. Żaden refit nie dostaje końcowego testu.
+Etapy są osobnymi nodami Kedro. Dopiero `freeze_validation_decision` tworzy
+`selection.json` z modelem, ścieżkami i progami **wszystkich** kandydatów.
+`evaluate_frozen_test` korzysta z tego snapshotu, a nie z mutowalnego raportu treningu.
+Niezgodne dane, konfiguracja lub zmieniony snapshot blokują test. Ponowna selekcja
+lub nadpisanie raportu testowego tego samego runu są odrzucane.
+Przed podziałem testowym i ładowaniem modelu wspólny `assert_prepared_data` sprawdza,
+czy `prepared_data` odpowiada normalizacji i filtrowaniu `raw_data`: porównuje target,
+cechy wymagane kontraktem, typy, indeks i kolejność. Poprawne usunięcie rekordów bez
+targetu oraz pominięcie cech wykluczonych (np. `duration`) są dozwolone.
 
-## Podział i wybór konfiguracji
+Próg maksymalizuje F1 na validation albo predykcjach OOF/forward; przy remisie wybieramy
+wyższy próg. Crossfold stosuje jeden próg do wszystkich okien i raportuje ich średnią,
+minimum i odchylenie F1. Remis między konfiguracjami rozstrzyga nazwa alfabetyczna.
+Dummy w holdout ma stały próg 0,5. Raporty zachowują również wynik każdego modelu przy 0,5.
+Te same dane służą do selekcji i oceny validation, więc ten wynik jest optymistyczny;
+końcowy test nie uczestniczy w dopasowaniu ani doborze progu.
 
-Źródło parametrów splitu: `project.yaml`. Najpierw odcinamy ostatnie 20% danych jako test,
-potem ostatnie 20% pozostałej części jako validation. Liczności zaokrąglamy w górę
-dla testu i validation: na pełnych danych **28 934 train / 7234 validation / 9043 test**.
-Indeks i kolejność wejścia pozostają zachowane; nie sortujemy po indeksie ani nie tasujemy.
-
-Nody treningowe dostają tylko train i validation. Pipeline `experiments` nie ocenia testu.
-`experiments_test` dodaje końcową ocenę wszystkich zamkniętych konfiguracji na ostatnich 20%.
-Najpierw zapisuje `selection.json`: wybór na podstawie F1 validation, z alfabetycznym
-rozstrzyganiem remisów. Wynik testowy nie zmienia wyboru ani progu.
-
-`threshold_mode: validation_f1` dobiera próg osobno dla każdego modelu na validation
-(maksymalne F1, przy remisie wyższy próg). Dummy zachowuje próg 0,5. Raport pokazuje
-również wynik przy 0,5. Nie wykonujemy refit na 80%.
-
-Sklearn preprocessing jest dopasowywany na train. Dla AutoGluona jawnie dopasowujemy
-`AutoMLPipelineFeatureGenerator` na train przed `fit`, a validation przekazujemy jako
-`tuning_data`. To istotne: domyślny generator AutoGluona analizuje train razem z tuning_data.
-W wariancie 64/16/20 wyłączamy bagging, stacking i dynamic stacking. Weighted ensemble może dobierać wagi
-na validation, więc jego wynik nie jest niezależną oceną na teście.
-AutoGluon wykorzystuje `stopping_metric: log_loss` także do wewnętrznego wyboru modeli
-i ensemble; porównanie konfiguracji projektu nadal opiera się na F1 validation.
-Kolumny numeryczne konwertujemy bez dopasowania do `float64`, ponieważ nullable pandas
-`Int64` (`pdays`) nie jest poprawnie rozpoznawane przez inferencję typów AutoGluona.
-
-## Konfiguracje i komendy
-
-Instalacja zgodnie z przypięciami projektu:
+## Konfiguracja i uruchomienie
 
 ```bash
 conda activate asi-ml
 python -m pip install -r requirements/preflight-s3.txt -c constraints.txt
 python -m pip check
+
+# Każdy protokół: trening, zamrożenie decyzji, końcowy test.
+KEDRO_DISABLE_TELEMETRY=1 kedro run --pipelines experiments_test
+KEDRO_DISABLE_TELEMETRY=1 kedro run --pipelines experiments_bagged_test
+KEDRO_DISABLE_TELEMETRY=1 kedro run --pipelines experiments_crossfold_test
 ```
 
-`conf/base/parameters_experiments.yml` definiuje cztery konfiguracje: `gbm_small`,
-`gbm_large`, `catboost`, `tree_ensemble` (GBM/CAT/RF/XT). Każda ma limit `fit` 120 s,
-8 CPU i 0 GPU. Limit AutoGluona jest budżetem treningu, nie twardym limitem całego
-procesu: preprocessing, ensemble, zapis i sprawdzenie odczytu mogą dodać czas.
-Baseline LogisticRegression i dummy są uruchamiane przed kandydatami na tym samym train.
+Bez `_test` przebieg kończy się zapisaniem decyzji po walidacji. `--env ci` wybiera
+próbkę i sam baseline, bez SDK AutoGluona/W&B. Aby sprawdzić AutoGluona na próbce,
+dodać `--env ci --params experiments.autogluon_enabled=true`.
+Na PowerShell ustawić `$env:KEDRO_DISABLE_TELEMETRY="1"` przed `kedro run ...`.
+
+`conf/base/parameters_experiments.yml` definiuje cztery konfiguracje: dwa LightGBM,
+CatBoost i zestaw GBM/CAT/RF/XT. Każdy `fit` ma budżet 120 s, 8 CPU i 0 GPU.
+Log-loss służy do early stopping i wewnętrznej selekcji AutoGluona; projekt wybiera
+według F1. Nie używamy stackingu ani dynamic stacking. Crossfold może wykorzystać
+trzy budżety na konfigurację; `refit_full` jest poza limitem `fit` i odtwarza wybraną
+liczbę iteracji. To nie jest twardy limit czasu całego procesu.
+Liczby foldów są w `parameters_validation_protocols.yml`.
+
+## Pliki wynikowe i przekazanie do #19/#20
+
+Catalog wskazuje `experiment_store`: `data/08_reporting/experiments/` dla pełnych danych,
+`data/08_reporting/ci/experiments/` dla próbki. Każdy run ma osobny katalog UTC/protokół/ID.
+
+| Plik | Kontrakt |
+| --- | --- |
+| `config.json`, `provenance.json` | efektywne parametry, SHA, dirty flag, fingerprint i wersje |
+| `split.json` albo `folds.json` | dokładne granice pozycyjne i plan foldów |
+| `metrics.json` | status treningu, wyniki validation, progi, ścieżki i `model_kind` |
+| `<model>_oof.json` | indeksy, etykiety i prawdopodobieństwa użyte przez CV |
+| `selection.json` | niezmienny snapshot wszystkich progów i wybór przed testem |
+| `test_metrics.json` | osobny status i metryki finalnego testu, tylko dla `_test` |
+
+Fingerprint `loaded-data-csv-v1` to SHA-256 CSV wczytanego `raw_data`, z nagłówkami,
+indeksem, kolejnością i końcami linii LF. To inny hash niż bajty oryginalnego pliku
+z downloadera. Dirty flag oznacza, że sam SHA nie odtwarza niezacommitowanego kodu.
+Raporty JSON są zapisywane atomowo. Błąd zachowuje wcześniejsze wyniki i status `failed`.
+
+Modele są natywnymi wynikami eksperymentów: pickle sklearn albo katalog AutoGluona.
+`models.py` obsługuje ten lokalny zapis/odczyt; to nie jest pakiet produkcyjny z #20.
+Anton otrzymuje model, config, provenance, metryki i próg z `selection.json`.
+Przy predykcji trzeba użyć `P(y=1) >= decision_threshold`; natywne `predict()` może
+nadal używać 0,5. Docelowy pakiet, wspólny loader i alias `production` należą do #20.
+Pojedynczy `prediction_seconds` w holdout jest pomiarem pomocniczym, nie benchmarkiem #19.
+
+## Zapisane wyniki porównania
+
+F1 na tych samych końcowych 9043 rekordach, z progami dobranymi bez testu:
+
+| Model | 64/16/20 | 80/20 bagged | Crossfold chronologiczny |
+| --- | ---: | ---: | ---: |
+| baseline | 0,5064 | 0,4892 | 0,5210 |
+| gbm_small | 0,5390 | 0,4209 | 0,4923 |
+| gbm_large | 0,5220 | 0,3617 | 0,4817 |
+| catboost | 0,1510 | 0,5103 | 0,4800 |
+| tree_ensemble | 0,1737 | 0,4976 | 0,4800 |
+
+Przed testem: holdout i bagging wybrały `tree_ensemble`, crossfold wybrał baseline.
+Źródła lokalne: `20261123T225040-363c1efb`, `20261123T230646-bagged-18271cdb`,
+`20261123T230547-chronological-1ba8a098`. Pełne modele pozostają poza Gitem;
+tabela jest dostępna również po czystym sklonowaniu repozytorium.
+Test był już oglądany w eksploracjach: jest wspólnym benchmarkiem, nie nowym niezależnym
+audytem. Produkcyjna decyzja pozostaje w #19 i obejmuje również koszty użycia.
+
+Początkowe F1=0 przy progu 0,5 było poprawnie policzone: train miał 5,0% pozytywów,
+validation 13,7%. Dobór progu i log-loss pozwoliły rozdzielić sygnał modelu od decyzji
+klasyfikacyjnej; nie usuwają dryfu między okresami.
+
+## Sprawdzenia
+
+Po poprawkach review: **328 testów przeszło w osobnym checkoutcie bez lokalnych ustawień**,
+także z zewnętrzną konfiguracją wymuszającą niedziałające podpisywanie GPG.
+Przeszły pre-commit, lint/format i kontrola diffu. Ponowiono trzy pełne przebiegi
+AutoGluona: wyniki F1 i wybory modeli pozostały zgodne z tabelą. Identyfikatory runów:
+`20261123T232543-holdout-6bf251c7`, `20261123T232543-bagged-c7e1b345`,
+`20261123T232543-chronological-3d2c20c4`.
+
+Graf i wejścia nodów: [`pipeline.py`](../../src/asi_project/pipelines/experiments/pipeline.py).
+Podział odpowiedzialności: `splits.py` — granice/foldy, `models.py` — adaptery,
+`nodes.py`/`cross_validation.py` — trening, `scoring.py` — metryki i progi,
+`evaluation.py` — zamrożenie decyzji i test, `artifacts.py` — raporty lokalne.
 
 ```bash
-# Lekki przebieg na próbce, bez SDK AutoGluona i W&B:
-KEDRO_DISABLE_TELEMETRY=1 kedro run --pipelines experiments --env ci
-
-# Rzeczywiste cztery konfiguracje AutoGluona na próbce:
-KEDRO_DISABLE_TELEMETRY=1 kedro run --pipelines experiments --env ci --params experiments.autogluon_enabled=true
-
-# Ten sam zestaw na pełnych danych:
-KEDRO_DISABLE_TELEMETRY=1 kedro run --pipelines experiments
-
-# Pełny przebieg z wyborem na validation i końcowym testem:
-KEDRO_DISABLE_TELEMETRY=1 kedro run --pipelines experiments_test
+pytest -q
+pre-commit run --all-files
 ```
 
-Na PowerShell ustawić wcześniej `$env:KEDRO_DISABLE_TELEMETRY="1"`, a następnie wykonać
-samo `kedro run ...`. Pełne dane muszą już istnieć zgodnie z catalogiem.
-
-## Wynik i przekazanie do Antona
-
-Catalog wskazuje `experiment_store`: pełne dane w `data/08_reporting/experiments/`,
-próbka w `data/08_reporting/ci/experiments/`. Każdy przebieg dostaje nowy katalog
-z czasem UTC i losowym identyfikatorem; poprzednie wyniki pozostają zachowane.
-
-| Plik | Zawartość |
-| --- | --- |
-| `config.json` | efektywne parametry projektu, treningu i wszystkich kandydatów |
-| `provenance.json` | SHA, dirty flag, fingerprint wejścia i wersje bibliotek |
-| `split.json` | liczności i przedziały pozycji; prawy kraniec jest wyłączny |
-| `metrics.json` | status, metryki validation, wstępny czas predykcji i ścieżki modeli |
-| `selection.json` | wybór na validation zapisany przed oceną testu (tylko `experiments_test`) |
-| `test_metrics.json` | końcowe metryki testowe przy zamrożonych progach |
-| `baseline.pkl` | natywny zapis sklearn na potrzeby eksperymentu |
-| `dummy.pkl` | natywny zapis modelu odniesienia |
-| katalog nazwy kandydata | natywny zapis AutoGluona, w tym jego logi |
-
-`prediction_seconds` to pojedynczy pomiar pomocniczy, jeszcze nie benchmark z #19.
-Zapis/odczyt każdego modelu jest sprawdzany przez porównanie prawdopodobieństw validation.
-Wyniki częściowe są zapisywane po każdym kandydacie; błąd kończy komendę błędem i statusem
-`failed`, zamiast udawać udany zestaw eksperymentów.
-
-Fingerprint (`loaded-data-csv-v1`) identyfikuje wczytane `raw_data`, wraz z indeksem,
-nagłówkami i kolejnością. Jest inny niż hash bajtów oryginalnego pliku z downloadera.
-Dirty flag oznacza, że sam SHA nie odtwarza jeszcze lokalnego stanu kodu.
-
-Anton (#20) otrzymuje natywny model, efektywną konfigurację, provenance i metryki.
-Protokoły CV dodają `folds.json` oraz `<model>_oof.json` z indeksami, etykietami i
-prawdopodobieństwami do odtworzenia selekcji. Końcowy model crossfold jest zapisany
-w katalogu ostatniego foldu jako wariant `_FULL`; ścieżkę wskazuje `model_path`.
-Te pliki są wynikami eksperymentu; docelowy pakiet i wspólny loader pozostają jego zadaniem.
-Nie publikujemy modelu ani nie przypisujemy aliasu `production` w tej ścieżce.
-
-## Diagnoza F1=0 i lokalna weryfikacja
-
-Pierwszy przebieg wszystkich modeli dawał F1=0 przy progu 0,5. Niezależne przeliczenie
-potwierdziło metryki: modele przewidywały same zera. Train ma 1441 pozytywów z 28 934
-(5,0%), validation 992 z 7234 (13,7%); validation zawiera też miesiące `apr` i `mar`
-niewidziane w train. Dodatkowo F1 przy 0,5 było płaskim sygnałem dla early stopping
-i wewnętrznego wyboru modeli. Sama zmiana na log-loss nie usunęła zerowego F1.
-
-Po wprowadzeniu progów validation, probabilistycznej metryki wewnętrznej i poprawie
-typu `pdays`, pełny przebieg `20261123T225040-363c1efb` zakończył się następująco:
-
-| Konfiguracja | Próg z validation | F1 validation | F1 test |
-| --- | ---: | ---: | ---: |
-| baseline | 0,05364 | 0,2997 | 0,5064 |
-| gbm_small | 0,04300 | 0,2667 | 0,5390 |
-| gbm_large | 0,04602 | 0,2654 | 0,5220 |
-| catboost | 0,18402 | 0,3188 | 0,1510 |
-| tree_ensemble | 0,17940 | 0,3208 | 0,1737 |
-| dummy | 0,5 (stały) | 0 | 0 |
-
-Wybór na validation wskazał `tree_ensemble` przed oceną testu. Jego słabszy wynik
-testowy jest ograniczeniem generalizacji w czasie; nie zmieniamy zwycięzcy na podstawie
-testu. To wynik eksperymentu, nie decyzja o modelu produkcyjnym z #19.
-Baseline S3 był trenowany na 64%, więc nie jest identycznym eksperymentem co baseline S2 na 80%.
-
-Sprawdzenia: 265 testów `pytest`, `ruff check src tests scripts`, `git diff --check`
-i `pip check` przeszły. Wykonano rzeczywiste przebiegi na próbce i pełnych danych,
-z zapisem/odczytem modeli; końcowy pełny przebieg obejmował etap testowy. Testy regresyjne
-sprawdzają znany optymalny próg, remisy, brak wpływu etykiet testowych na wybór/progi,
-chronologiczne granice, rzeczywisty zapis/odczyt i dopasowanie generatora tylko na train.
-
-Dokumentacja API: [AutoGluon `fit`](https://auto.gluon.ai/stable/api/autogluon.tabular.TabularPredictor.fit.html).
+Testy obejmują granice i kierunek foldów, rzeczywisty runner Kedro dla sześciu wariantów,
+zapis/odczyt i osobny proces bez `fit`, wyrównanie klas/indeksów prawdopodobieństw,
+niezmienność wszystkich progów, odrzucenie niezgodnych danych, błędy zapisu i wyniki
+częściowe. Testy kontraktu SDK nie zastępują rzeczywistych przebiegów AutoGluona;
+te sprawdzamy komendami powyżej na próbce i pełnych danych.
+Regresje po review obejmują zmianę samego `prepared_data` bez zmiany fingerprintu raw
+oraz izolację fixture Git od podpisywania, hooków i przekierowań środowiskowych.

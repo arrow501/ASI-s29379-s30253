@@ -13,14 +13,11 @@ import pytest
 from asi_project.config import ConfigError
 from asi_project.config_validation import project_parameters
 from asi_project.data import DataContractError, filter_training_rows, normalize_input
-from asi_project.pipelines.experiments.nodes import (
-    _validation_result,
-    evaluate_frozen_experiments,
-    run_experiments,
-    split_experiment_data,
-    validate_experiment_settings,
-    validation_threshold,
-)
+from asi_project.pipelines.experiments.evaluation import evaluate_test, freeze_selection
+from asi_project.pipelines.experiments.nodes import train_holdout_models
+from asi_project.pipelines.experiments.scoring import validation_result, validation_threshold
+from asi_project.pipelines.experiments.settings import validate_experiment_settings
+from asi_project.pipelines.experiments.splits import split_experiment_data
 
 
 @pytest.fixture
@@ -88,7 +85,9 @@ def test_local_baseline_is_persisted_reloadable_and_runs_without_optional_sdks(
     monkeypatch.setitem(sys.modules, "autogluon.tabular", None)
     split = split_experiment_data(frame, parameters)
     reports = [
-        run_experiments(*split, frame, parameters, {"max_iter": 1000}, settings, "sample", tmp_path)
+        train_holdout_models(
+            *split, frame, parameters, {"max_iter": 1000}, settings, "sample", tmp_path
+        )
         for _ in range(2)
     ]
     assert reports[0]["run_dir"] != reports[1]["run_dir"]
@@ -104,7 +103,13 @@ def test_local_baseline_is_persisted_reloadable_and_runs_without_optional_sdks(
         assert len(json.loads((root / "provenance.json").read_text())["data_fingerprint"]) == 64
         model = pickle.loads((root / "baseline.pkl").read_bytes())
         numeric = model.named_steps["preprocessing"].named_transformers_["numeric"]
-        expected = split[0][parameters["numeric_features"]].median().fillna(0).to_numpy(float)
+        expected = np.array(
+            [
+                split[0][name].dropna().median() if split[0][name].notna().any() else 0
+                for name in parameters["numeric_features"]
+            ],
+            dtype=float,
+        )
         np.testing.assert_allclose(numeric.named_steps["imputer"].statistics_, expected)
         assert len(model.predict(split[1])) == 16
         assert saved["results"]["dummy"]["validation"]["f1"] == 0
@@ -113,7 +118,7 @@ def test_local_baseline_is_persisted_reloadable_and_runs_without_optional_sdks(
 def test_overlapping_data_are_rejected_before_writing(frame, parameters, settings, tmp_path):
     X_train, _, y_train, _, summary = split_experiment_data(frame, parameters)
     with pytest.raises(DataContractError, match="disjoint"):
-        run_experiments(
+        train_holdout_models(
             X_train,
             X_train,
             y_train,
@@ -168,15 +173,17 @@ def test_failure_preserves_partial_results_and_is_not_a_success(
     def fail(*args, **kwargs):
         raise RuntimeError("deliberate failure")
 
-    monkeypatch.setattr(nodes, "_fit_autogluon", fail)
+    monkeypatch.setattr(nodes, "fit_holdout_autogluon", fail)
     enabled = {**copy.deepcopy(settings), "autogluon_enabled": True}
     # No SDK required to test the failure contract.
     monkeypatch.setitem(
         sys.modules, "autogluon.tabular", type("Fake", (), {"TabularPredictor": object})
     )
-    monkeypatch.setattr(nodes, "version", lambda name: "test-version")
+    from asi_project.pipelines.experiments import artifacts
+
+    monkeypatch.setattr(artifacts, "version", lambda name: "test-version")
     with pytest.raises(RuntimeError, match="deliberate failure"):
-        run_experiments(
+        train_holdout_models(
             *split_experiment_data(frame, parameters),
             frame,
             parameters,
@@ -194,7 +201,7 @@ def test_failure_preserves_partial_results_and_is_not_a_success(
 def test_autogluon_prefits_features_only_on_train_and_gets_explicit_validation(
     frame, parameters, settings, tmp_path, monkeypatch
 ):
-    from asi_project.pipelines.experiments.nodes import _fit_autogluon
+    from asi_project.pipelines.experiments.models import fit_holdout_autogluon
 
     captured = {}
 
@@ -220,7 +227,7 @@ def test_autogluon_prefits_features_only_on_train_and_gets_explicit_validation(
     monkeypatch.setitem(sys.modules, "autogluon.features.generators", features)
     monkeypatch.setitem(sys.modules, "autogluon.tabular", tabular)
     X, X_val, y, y_val, _ = split_experiment_data(frame, parameters)
-    _fit_autogluon(X, X_val, y, y_val, parameters, settings["candidates"][0], tmp_path, 2)
+    fit_holdout_autogluon(X, X_val, y, y_val, parameters, settings["candidates"][0], tmp_path, 2)
     assert captured["feature_fit_index"] == frame.index[:64].tolist()
     assert captured["feature_fit_target"] == [0, 1] * 32
     pd.testing.assert_frame_equal(
@@ -251,7 +258,7 @@ def test_validation_threshold_recovers_known_signal_below_half():
         classes_=np.array([0, 1]),
         predict_proba=lambda X: np.column_stack([1 - probability, probability]),
     )
-    result = _validation_result(model, target, target, "validation_f1")
+    result = validation_result(model, target, target, "validation_f1")
     assert result["decision_threshold"] == 0.12
     assert result["validation"]["f1"] == 1
     assert result["validation_at_0_5"]["f1"] == 0
@@ -282,7 +289,7 @@ def test_test_stage_freezes_validation_selection_and_does_not_recalibrate(
         data = frame.copy()
         if changed_test:
             data.iloc[80:, data.columns.get_loc("y")] = ["yes", "no"] * 10 + ["yes"]
-        report = run_experiments(
+        report = train_holdout_models(
             *split_experiment_data(data, parameters),
             data,
             parameters,
@@ -291,7 +298,7 @@ def test_test_stage_freezes_validation_selection_and_does_not_recalibrate(
             "sample",
             tmp_path,
         )
-        result = evaluate_frozen_experiments(data, data, parameters, report)
+        result = evaluate_test(data, data, parameters, freeze_selection(report))
         assert result["status"] == "completed"
         assert result["selected_candidate"] == "baseline"
         assert result["test_used_for_selection"] is False
@@ -306,5 +313,5 @@ def test_test_stage_freezes_validation_selection_and_does_not_recalibrate(
         }
         selections.append((result["selected_candidate"], result["decision_threshold"]))
         with pytest.raises(FileExistsError):
-            evaluate_frozen_experiments(data, data, parameters, report)
+            evaluate_test(data, data, parameters, freeze_selection(report))
     assert selections[0] == selections[1]

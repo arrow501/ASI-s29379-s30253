@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from kedro.io import AbstractDataset
+from kedro.io import AbstractDataset, DatasetError
 
 
 class ExperimentStore(AbstractDataset):
@@ -13,7 +13,9 @@ class ExperimentStore(AbstractDataset):
         return self._path
 
     def _save(self, data):
-        raise NotImplementedError("ExperimentStore is an input location, not a model package.")
+        raise DatasetError(
+            "ExperimentStore is a read-only output location supplied to training nodes."
+        )
 
     def _describe(self):
         return {"filepath": str(self._path)}

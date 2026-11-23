@@ -120,8 +120,8 @@ Najważniejsze pliki Sprintu 1:
 | Plik | Kto edytuje | Po co |
 |---|---|---|
 | `project.yaml` | zespół | wybrany dataset, typy cech, parametry splitu |
-| `src/asi_project/data.py` | zespół (miejsca oznaczone TODO) | input normalization i training-only filtering |
-| `src/asi_project/model.py` | zespół (TODO) | sklearn Pipeline z model preprocessing |
+| `src/asi_project/data.py` | zespół | input normalization i training-only filtering |
+| `src/asi_project/model.py` | zespół | sklearn Pipeline z model preprocessing |
 | `notebooks/01_eda.ipynb` | zespół | EDA i decyzje o danych |
 | `notebooks/02_baseline.ipynb` | zespół | baseline i `metrics.json` |
 | `docs/architecture.md` | zespół | diagram v0 systemu docelowego |
@@ -216,8 +216,8 @@ CI (GitHub Actions, `.github/workflows/ci.yml`) przy każdym pushu do `main` i k
 5. publikuje raport Definition of Done w podsumowaniu joba.
 
 CI nie korzysta z sekretów ani eksperymentów W&B/AutoGluona online.
-Opcjonalny tracking baseline'u: [start W&B w Sprincie 3](docs/notes/sprint-3-wandb.md).
-Lokalny trening i walidacja 64/16/20: [eksperymenty Sprintu 3](docs/notes/sprint-3-local-experiments.md).
+Lokalne eksperymenty Sprintu 3 — holdout, bagging i foldy chronologiczne:
+[komendy, kontrakt wyników i ograniczenia](docs/notes/sprint-3-local-experiments.md).
 
 ## Definition of Done Sprintu 1
 
