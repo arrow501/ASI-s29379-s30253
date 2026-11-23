@@ -13,6 +13,7 @@ def project_parameters(config: ProjectConfig, contract: DatasetContract) -> dict
         "numeric_features": list(config.numeric_features),
         "categorical_features": list(config.categorical_features),
         "test_size": config.test_size,
+        "validation_size": config.validation_size,
         "random_state": config.random_state,
         "target": contract.target,
         "positive_class": contract.positive_class,
@@ -58,6 +59,13 @@ def validate_project_parameters(params: object, contract: DatasetContract) -> No
     ):
         problems.append("project.test_size must be a number strictly between 0 and 1.")
     seed = params.get("random_state")
+    validation_size = params.get("validation_size", 0.2)
+    if (
+        isinstance(validation_size, bool)
+        or not isinstance(validation_size, int | float)
+        or not 0 < validation_size < 1
+    ):
+        problems.append("project.validation_size must be a number strictly between 0 and 1.")
     if isinstance(seed, bool) or not isinstance(seed, int) or not 0 <= seed < 2**32:
         problems.append("project.random_state must be an integer in 0..2**32-1.")
     if problems:

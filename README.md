@@ -215,7 +215,9 @@ CI (GitHub Actions, `.github/workflows/ci.yml`) przy każdym pushu do `main` i k
    próbce CI i sprawdza wynik;
 5. publikuje raport Definition of Done w podsumowaniu joba.
 
-CI nie korzysta z sekretów, W&B ani AutoGluona.
+CI nie korzysta z sekretów ani eksperymentów W&B/AutoGluona online.
+Opcjonalny tracking baseline'u: [start W&B w Sprincie 3](docs/notes/sprint-3-wandb.md).
+Lokalny trening i walidacja 64/16/20: [eksperymenty Sprintu 3](docs/notes/sprint-3-local-experiments.md).
 
 ## Definition of Done Sprintu 1
 

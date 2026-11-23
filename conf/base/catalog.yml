@@ -1,4 +1,8 @@
 # Full-data input and persisted training outputs.
+experiment_store:
+  type: asi_project.experiment_store.ExperimentStore
+  filepath: data/08_reporting/experiments
+
 raw_data:
   type: pandas.CSVDataset
   filepath: data/01_raw/bank_marketing/bank-full.csv

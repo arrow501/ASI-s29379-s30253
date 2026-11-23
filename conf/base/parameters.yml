@@ -7,3 +7,10 @@ training:
 
 reporting:
   data_mode: full
+
+# Opt-in: kedro run --pipeline baseline_tracking. Online wymaga entity i project.
+tracking:
+  mode: disabled
+  entity: null
+  project: null
+  name: baseline-s2

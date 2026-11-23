@@ -58,6 +58,7 @@ class ProjectConfig:
     random_state: int
     ci_sample_path: Path
     metrics_path: Path
+    validation_size: float = 0.2
 
     @property
     def dataset_selected(self) -> bool:
@@ -147,6 +148,13 @@ def load_project_config(root: Path | None = None) -> ProjectConfig:
             raise ConfigError(f"features.{name} musi być listą niepustych nazw kolumn.")
     test_size = split.get("test_size", 0.2)
     random_state = split.get("random_state", 42)
+    validation_size = split.get("validation_size", 0.2)
+    if (
+        isinstance(validation_size, bool)
+        or not isinstance(validation_size, int | float)
+        or not 0 < validation_size < 1
+    ):
+        raise ConfigError("split.validation_size musi być liczbą z zakresu (0, 1).")
     if isinstance(test_size, bool) or not isinstance(test_size, int | float):
         raise ConfigError("split.test_size musi być liczbą.")
     if isinstance(random_state, bool) or not isinstance(random_state, int):
@@ -161,6 +169,7 @@ def load_project_config(root: Path | None = None) -> ProjectConfig:
         random_state=int(split.get("random_state", 42)),
         ci_sample_path=root / str(paths.get("ci_sample", "data/01_raw/sample.csv")),
         metrics_path=root / str(paths.get("metrics", "metrics.json")),
+        validation_size=float(validation_size),
     )
 
 

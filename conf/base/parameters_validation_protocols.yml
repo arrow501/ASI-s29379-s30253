@@ -1,0 +1,4 @@
+# Wszystkie protokoły zachowują końcowe 20% z project.yaml jako wspólny test.
+validation_protocols:
+  bagging_folds: 5
+  chronological_folds: 3

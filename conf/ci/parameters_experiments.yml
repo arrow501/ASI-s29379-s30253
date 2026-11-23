@@ -1,0 +1,3 @@
+# CI nie potrzebuje SDK AutoGluona, kont ani sieci.
+experiments:
+  autogluon_enabled: false

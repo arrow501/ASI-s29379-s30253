@@ -23,6 +23,7 @@ def test_kedro_loads_shared_parameters_in_both_environments(repo_root, env, monk
             "numeric_features": list(config.numeric_features),
             "categorical_features": list(config.categorical_features),
             "test_size": config.test_size,
+            "validation_size": config.validation_size,
             "random_state": config.random_state,
             "target": contract.target,
             "positive_class": contract.positive_class,
