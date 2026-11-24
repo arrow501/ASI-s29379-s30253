@@ -44,7 +44,7 @@ def _():
 def exploration_navigation(mo):
     mo.sidebar(
         mo.outline(label="Visual exploration"),
-        footer=mo.md("Optional EDA · training rows only"),
+        footer=mo.md("PCA/t-SNE: train 80% · split diagnostics: full sequence"),
         width=260,
     )
     return
@@ -56,9 +56,10 @@ def _(mo):
     # Visual exploration
     **Bank Marketing · look, rotate, select, question.**
 
-    Explore the earlier chronological **training 80%**. The final 20% never enters
-    these plots or fitted transforms. The original Sprint 1 EDA already examined
-    full data; this separation does not retroactively make that test set unseen.
+    PCA, t-SNE and sections 1–5 explore the earlier chronological **training 80%**.
+    Sections 6–8 explicitly diagnose splits and drift across the **full sequence**,
+    including the already-inspected test. They do not fit representations on the test
+    or turn it into a new unseen holdout.
 
     Start with segment rates, then rotate the PCA cloud. Select a region and ask
     which original features distinguish it. Finish by testing whether a t-SNE
@@ -979,6 +980,581 @@ def chronology_reading(mo):
     They are not automatic change-point detections. Periodicity in record order
     would not establish calendar seasonality. No forecasting model is fitted here.
     """).style({"max-width": "74ch", "line-height": "1.7"})
+    return
+
+
+@app.cell(hide_code=True)
+def split_imports():
+    from asi_project.split_exploration import (
+        PART_COLOURS,
+        PART_LABELS,
+        category_drift,
+        full_sequence_view,
+        read_oof_catalog,
+        split_layout,
+        split_summary,
+        threshold_counts,
+        threshold_curve,
+    )
+
+    return (
+        PART_COLOURS,
+        PART_LABELS,
+        category_drift,
+        full_sequence_view,
+        read_oof_catalog,
+        split_layout,
+        split_summary,
+        threshold_counts,
+        threshold_curve,
+    )
+
+
+@app.cell(hide_code=True)
+def split_intro(mo):
+    mo.md(r"""
+    ## 6 · Splits and drift — what are we comparing?
+
+    This panel shows the **full sequence**, including the already-inspected test set.
+    It describes data after exploration; it is not a new independent model audit.
+    PCA, t-SNE and the earlier views still use only the first 80%.
+
+    Check whether a single validation window resembles training and the later period.
+    The outer test must preserve chronology; equal record counts do not imply equal
+    amounts of time. We do not reconstruct dates or years from `day` and `month` alone.
+    """).style({"max-width": "82ch", "line-height": "1.65"})
+    return
+
+
+@app.cell(hide_code=True)
+def split_source(
+    config,
+    data_source,
+    full_sequence_view,
+    read_oof_catalog,
+    repo_root,
+):
+    split_X, split_y, split_input_fingerprint = full_sequence_view(repo_root, data_source.value)
+    split_oof_catalog = read_oof_catalog(
+        repo_root, split_input_fingerprint, split_y, config.test_size
+    )
+    return split_X, split_oof_catalog, split_y
+
+
+@app.cell(hide_code=True)
+def split_protocol_control(mo, split_y):
+    split_protocol = mo.ui.dropdown(
+        {
+            "Holdout · default 64/16/20": "holdout",
+            "80/20 · random bagging folds": "bagged",
+            "80/20 · expanding chronological folds": "chronological",
+        },
+        value="Holdout · default 64/16/20",
+        label="Protocol",
+        full_width=True,
+    )
+    split_window = mo.ui.slider(
+        10,
+        max(10, min(5000, len(split_y) // 10 * 10)),
+        step=10,
+        value=max(10, min(1000, len(split_y) // 10)),
+        label="Complete rolling window (records)",
+        show_value=True,
+    )
+    mo.hstack([split_protocol, split_window], widths=[2, 1], align="end", wrap=True)
+    return split_protocol, split_window
+
+
+@app.cell(hide_code=True)
+def split_fold_control(mo, split_protocol):
+    split_validation_percent = mo.ui.slider(
+        5,
+        30,
+        value=20,
+        step=1,
+        label="Validation as % of development (first 80%)",
+        show_value=True,
+        disabled=split_protocol.value == "bagged",
+    )
+    split_fold = mo.ui.slider(
+        1,
+        5 if split_protocol.value == "bagged" else 3,
+        value=3 if split_protocol.value == "chronological" else 1,
+        label="Displayed fold",
+        show_value=True,
+        disabled=split_protocol.value == "holdout",
+    )
+    mo.vstack(
+        [
+            mo.hstack([split_validation_percent, split_fold], justify="start", wrap=True),
+            mo.md(
+                "Changing these controls does not train a model or recompute geometry. "
+                "For bagging, the map illustrates a random stratified split; AutoGluon manages its own folds, and RF/XT may use OOB."
+            ),
+        ]
+    )
+    return split_fold, split_validation_percent
+
+
+@app.cell(hide_code=True)
+def split_membership_data(
+    config,
+    np,
+    split_X,
+    split_fold,
+    split_layout,
+    split_protocol,
+    split_summary,
+    split_validation_percent,
+    split_y,
+):
+    split_membership = split_layout(
+        split_y,
+        split_protocol.value,
+        validation_fraction=split_validation_percent.value / 100,
+        fold=int(split_fold.value),
+        test_size=config.test_size,
+        seed=config.random_state,
+    )
+    split_stats = split_summary(split_X, split_y, split_membership)
+    split_plot_positions = np.unique(
+        np.linspace(0, len(split_y) - 1, min(1800, len(split_y)), dtype=int)
+    )
+    split_development_cut = len(split_y) - int(np.ceil(len(split_y) * config.test_size))
+    return (
+        split_development_cut,
+        split_membership,
+        split_plot_positions,
+        split_stats,
+    )
+
+
+@app.cell(hide_code=True)
+def split_sequence_cache(split_window, split_y):
+    split_rolling_rate = (
+        split_y.reset_index(drop=True)
+        .rolling(int(split_window.value), min_periods=int(split_window.value))
+        .mean()
+        * 100
+    )
+    return (split_rolling_rate,)
+
+
+@app.cell(hide_code=True)
+def split_membership_view(
+    PART_COLOURS,
+    PART_LABELS,
+    go,
+    mo,
+    split_membership,
+    split_plot_positions,
+):
+    split_part_order = list(PART_LABELS)
+    split_part_codes = {part: number for number, part in enumerate(split_part_order)}
+    split_map_figure = go.Figure(
+        go.Heatmap(
+            x=split_plot_positions + 1,
+            y=[0],
+            z=[split_membership.iloc[split_plot_positions].map(split_part_codes).to_list()],
+            text=[split_membership.iloc[split_plot_positions].map(PART_LABELS).to_list()],
+            zmin=-0.5,
+            zmax=3.5,
+            zsmooth=False,
+            colorscale=[
+                [0, PART_COLOURS["train"]],
+                [0.2499, PART_COLOURS["train"]],
+                [0.25, PART_COLOURS["validation"]],
+                [0.4999, PART_COLOURS["validation"]],
+                [0.5, PART_COLOURS["test"]],
+                [0.7499, PART_COLOURS["test"]],
+                [0.75, PART_COLOURS["unused"]],
+                [1, PART_COLOURS["unused"]],
+            ],
+            showscale=False,
+            hovertemplate="Position %{x:,.0f}<br>%{text}<extra></extra>",
+        )
+    )
+    split_map_figure.update_layout(
+        template="plotly_white",
+        height=150,
+        title="Which records belong to the displayed fold?",
+        yaxis={"visible": False},
+        xaxis_title="Record position · train green, validation amber, test red, unused grey",
+        margin={"t": 45, "b": 45, "l": 45, "r": 20},
+    )
+    mo.vstack(
+        [
+            mo.ui.plotly(split_map_figure),
+            mo.md(
+                "The map shows up to 1,800 positions; counts and statistics use every record. "
+                "The grey development tail in an earlier fold is used for neither its training nor its validation."
+            ),
+        ]
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def split_rate_view(
+    PART_COLOURS,
+    go,
+    mo,
+    np,
+    split_X,
+    split_development_cut,
+    split_membership,
+    split_plot_positions,
+    split_protocol,
+    split_rolling_rate,
+    split_window,
+    split_y,
+):
+    split_rate_figure = go.Figure(
+        go.Scatter(
+            x=split_plot_positions + 1,
+            y=split_rolling_rate.iloc[split_plot_positions],
+            mode="lines",
+            line={"color": "#285e8e", "width": 2},
+            name="Positive rate",
+            customdata=split_X.index.to_numpy()[split_plot_positions],
+            hovertemplate="Position %{x:,.0f}<br>Source index %{customdata}<br>Positives %{y:.2f}%<extra></extra>",
+        )
+    )
+    split_rate_figure.add_vrect(
+        x0=split_development_cut + 0.5,
+        x1=len(split_y) + 0.5,
+        fillcolor=PART_COLOURS["test"],
+        opacity=0.12,
+        line_width=0,
+        annotation_text="previously inspected test 20%",
+    )
+    if split_protocol.value != "bagged":
+        split_validation_positions = np.flatnonzero(split_membership.eq("validation"))
+        split_rate_figure.add_vrect(
+            x0=int(split_validation_positions.min()) + 0.5,
+            x1=int(split_validation_positions.max()) + 1.5,
+            fillcolor=PART_COLOURS["validation"],
+            opacity=0.17,
+            line_width=0,
+            annotation_text="validation",
+        )
+    split_rate_figure.update_layout(
+        template="plotly_white",
+        height=330,
+        title=f"Does validation reflect the later period? · window {int(split_window.value):,}",
+        xaxis_title="Record order, not elapsed time",
+        yaxis_title="Positives (%)",
+        margin={"t": 55, "b": 45, "l": 50, "r": 20},
+    )
+    mo.ui.plotly(split_rate_figure)
+    return
+
+
+@app.cell(hide_code=True)
+def split_summary_view(PART_LABELS, mo, split_stats):
+    split_summary_table = (
+        split_stats.assign(
+            part=split_stats.part.map(PART_LABELS),
+            rate=100 * split_stats.rate,
+            low=100 * split_stats.low,
+            high=100 * split_stats.high,
+            previous_contact=100 * split_stats.previous_contact,
+        )
+        .rename(
+            columns={
+                "part": "Partition",
+                "rows": "Records",
+                "positive": "Positives",
+                "rate": "Positives %",
+                "low": "Wilson 95% lower",
+                "high": "Wilson 95% upper",
+                "previous_contact": "Previous contact %",
+                "first_position": "First position",
+                "last_position": "Last position",
+            }
+        )
+        .round(2)
+    )
+    mo.vstack(
+        [
+            mo.ui.table(
+                split_summary_table, selection=None, pagination=False, show_column_summaries=False
+            ),
+            mo.md(
+                "Wilson intervals describe binomial uncertainty assuming independence; contacts and campaigns may be dependent. "
+                "The intervals do not correct for drift or campaign selection. In a random fold, first–last position does not describe a continuous block."
+            ),
+        ]
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def split_drift_controls(config, mo):
+    split_category = mo.ui.dropdown(
+        list(config.categorical_features), value="month", label="Category distribution"
+    )
+    mo.vstack(
+        [
+            mo.md("""
+    ## 7 · Have the features changed too, alongside the class balance?
+
+    Choose a feature and compare the partitions. Inspect categories absent from training
+    and the previous-contact shares in the table above. These describe differences,
+    not their causes.
+    """),
+            split_category,
+        ]
+    )
+    return (split_category,)
+
+
+@app.cell(hide_code=True)
+def split_drift_view(
+    PART_COLOURS,
+    PART_LABELS,
+    category_drift,
+    mo,
+    px,
+    split_X,
+    split_category,
+    split_membership,
+):
+    split_category_data = category_drift(split_X, split_membership, split_category.value)
+    split_category_plot = split_category_data.assign(
+        share=split_category_data.share * 100, part=split_category_data.part.map(PART_LABELS)
+    )
+    split_category_figure = px.bar(
+        split_category_plot,
+        x="category",
+        y="share",
+        color="part",
+        barmode="group",
+        custom_data=["rows", "unseen_in_train"],
+        color_discrete_map={PART_LABELS[part]: colour for part, colour in PART_COLOURS.items()},
+        labels={
+            "category": split_category.value,
+            "share": "Share within partition (%)",
+            "part": "Partition",
+        },
+        title="Train / validation / test composition",
+        height=330,
+    )
+    split_category_figure.update_traces(
+        hovertemplate="%{x}<br>Share %{y:.2f}%<br>Records %{customdata[0]}<br>Absent from training: %{customdata[1]}<extra>%{fullData.name}</extra>"
+    )
+    split_novel_categories = split_category_data.loc[
+        split_category_data.unseen_in_train & split_category_data.rows.gt(0),
+        ["part", "category", "rows", "share"],
+    ].assign(part=lambda df: df.part.map(PART_LABELS))
+    mo.vstack(
+        [
+            mo.ui.plotly(split_category_figure),
+            mo.md(
+                "Categories absent from training: **"
+                + (
+                    "; ".join(
+                        f"{row.part}: {row.category} ({row.rows} records)"
+                        for row in split_novel_categories.itertuples()
+                    )
+                    if len(split_novel_categories)
+                    else "none in the current split"
+                )
+                + "**. `unknown` remains a category and stays in the denominator."
+            ),
+        ]
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def split_stability_view(mo, pd, px, split_oof_catalog):
+    split_stability_rows = [
+        {
+            "model": record["model"],
+            "fold": number + 1,
+            "f1": score,
+            "threshold": record["scores"]["decision_threshold"],
+            "run": record["run"],
+        }
+        for record in split_oof_catalog.values()
+        if record["protocol"] == "chronological"
+        for number, score in enumerate(record["scores"].get("fold_f1", []))
+    ]
+    mo.stop(
+        not split_stability_rows,
+        mo.callout(
+            "No local fold results for this data source. Distribution views work independently.",
+            kind="info",
+        ),
+    )
+    split_stability_frame = pd.DataFrame(split_stability_rows)
+    split_stability_figure = px.line(
+        split_stability_frame,
+        x="fold",
+        y="f1",
+        color="model",
+        markers=True,
+        custom_data=["threshold", "run"],
+        height=330,
+        labels={
+            "fold": "Successive validation window",
+            "f1": "F1 at the threshold selected across all windows",
+        },
+        title="Does the model ranking persist across periods?",
+    )
+    split_stability_figure.update_xaxes(dtick=1)
+    split_stability_figure.update_traces(
+        hovertemplate="Fold %{x}<br>F1 %{y:.3f}<br>Threshold %{customdata[0]:.4f}<br>%{customdata[1]}<extra>%{fullData.name}</extra>"
+    )
+    mo.vstack(
+        [
+            mo.md("### Saved results, without retraining"),
+            mo.ui.plotly(split_stability_figure),
+            mo.md(
+                "Results come from a local run with a matching data fingerprint. The shared threshold was selected on these same windows: "
+                "this chart diagnoses stability; it is not an independent estimate of generalisation."
+            ),
+        ]
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def split_threshold_intro(mo):
+    mo.md(r"""
+    ## 8 · F1 = 0: no signal, or a decision at threshold 0.5?
+
+    The model estimates probabilities; the threshold turns them into decisions. If all
+    scores are below 0.5, it predicts only negatives and F1 is zero — even if it ranks
+    cases better than chance. Move the threshold and inspect precision, recall and errors.
+
+    We use only saved **OOF/forward predictions from the first 80%**, matching the current
+    source fingerprint and labels. No predictions from the final test enter this panel.
+    """).style({"max-width": "82ch", "line-height": "1.65"})
+    return
+
+
+@app.cell(hide_code=True)
+def split_threshold_controls(mo, split_oof_catalog):
+    mo.stop(
+        not split_oof_catalog,
+        mo.callout(
+            "No saved OOF predictions for this source. This optional panel does not require a model or AutoGluon. "
+            "Files are read from data/08_reporting/experiments/*/*_oof.json. The CI sample does not use full-dataset results.",
+            kind="info",
+        ),
+    )
+    split_oof_choice = mo.ui.dropdown(
+        list(split_oof_catalog),
+        value=next(iter(split_oof_catalog)),
+        label="Saved model and protocol",
+        full_width=True,
+    )
+    split_threshold = mo.ui.slider(
+        0, 1, step=0.001, value=0.5, show_value=True, include_input=True, label="Threshold P(y=1)"
+    )
+    mo.vstack([split_oof_choice, split_threshold])
+    return split_oof_choice, split_threshold
+
+
+@app.cell(hide_code=True)
+def split_threshold_data(
+    np,
+    split_oof_catalog,
+    split_oof_choice,
+    threshold_curve,
+):
+    split_selected_oof = split_oof_catalog[split_oof_choice.value]
+    split_curve = threshold_curve(split_selected_oof["target"], split_selected_oof["probability"])
+    split_best_threshold = float(
+        split_curve.loc[split_curve.f1.eq(split_curve.f1.max())].iloc[-1].threshold
+    )
+    split_curve_positions = np.unique(
+        np.linspace(0, len(split_curve) - 1, min(1500, len(split_curve)), dtype=int)
+    )
+    split_curve_plot = split_curve.iloc[split_curve_positions]
+    return split_best_threshold, split_curve_plot, split_selected_oof
+
+
+@app.cell(hide_code=True)
+def split_threshold_view(
+    go,
+    mo,
+    split_best_threshold,
+    split_curve_plot,
+    split_selected_oof,
+    split_threshold,
+    threshold_counts,
+):
+    split_threshold_metrics = threshold_counts(
+        split_selected_oof["target"], split_selected_oof["probability"], split_threshold.value
+    )
+    split_threshold_figure = go.Figure()
+    for _metric in ["f1", "precision", "recall"]:
+        split_threshold_figure.add_trace(
+            go.Scatter(
+                x=split_curve_plot.threshold,
+                y=split_curve_plot[_metric],
+                name=_metric,
+                mode="lines",
+                hovertemplate="Threshold %{x:.4f}<br>Score %{y:.3f}<extra>%{fullData.name}</extra>",
+            )
+        )
+    split_threshold_figure.add_vline(
+        x=0.5, line_dash="dash", line_color="#89929d", annotation_text="0.5"
+    )
+    split_threshold_figure.add_vline(
+        x=split_best_threshold,
+        line_dash="dot",
+        line_color="#2a9d8f",
+        annotation_text="max F1 on OOF",
+    )
+    split_threshold_figure.add_vline(x=split_threshold.value, line_color="#d99127")
+    split_threshold_figure.update_layout(
+        template="plotly_white",
+        height=330,
+        xaxis_title="Threshold",
+        yaxis_title="OOF / forward score",
+        yaxis_range=[0, 1.03],
+        margin={"t": 35, "b": 45},
+    )
+    mo.vstack(
+        [
+            mo.hstack(
+                [
+                    mo.stat(
+                        label=metric.upper() if metric == "f1" else metric,
+                        value=f"{split_threshold_metrics[metric]:.3f}",
+                    )
+                    for metric in ["f1", "precision", "recall"]
+                ]
+            ),
+            mo.ui.plotly(split_threshold_figure),
+            mo.md(
+                f"TP **{split_threshold_metrics['tp']}** · FP **{split_threshold_metrics['fp']}** · "
+                f"FN **{split_threshold_metrics['fn']}** · TN **{split_threshold_metrics['tn']}** · "
+                f"maximum F1 at threshold **{split_best_threshold:.5f}**. No fitting and no use of the final test."
+            ),
+        ]
+    )
+    return
+
+
+@app.cell(hide_code=True)
+def split_reading(mo):
+    mo.md("""
+    ### What should we check before the next experiment?
+
+    - Does strong performance persist across successive windows, or only one period?
+    - Does the positive rate rise alongside changes in contact channel and campaign history?
+    - Does F1 change because the model separates classes better, or because we moved the threshold?
+    - Are we comparing the same test records? Scores on the final 15% and 20% are not directly comparable.
+
+    Do not search for the split boundary that maximises the test score. This test has
+    already been inspected; base further decisions on training and validation, and treat
+    test results as a previously inspected benchmark.
+    """).style({"max-width": "82ch", "line-height": "1.65"})
     return
 
 

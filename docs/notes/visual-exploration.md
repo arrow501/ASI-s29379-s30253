@@ -63,11 +63,11 @@ text has its own readable block; controls and short tips stay near the relevant 
 
 ## Data and reactive boundaries
 
-Full source data is used when available, otherwise the CI sample. The selector
-can switch explicitly. All analysis uses only the earlier chronological training
-portion. No holdout labels, features or fitted statistics enter the plots.
-Previous Sprint 1 EDA used full data; this app cannot undo that prior inspection.
-The contract blocks `duration` and target leakage into the representation.
+Domyślnie aplikacja wybiera pełne dane lokalne, a przy ich braku próbkę CI.
+Selektor pozwala zmienić źródło. Sekcje 1–5, w tym PCA i t-SNE, używają wyłącznie
+pierwszych 80% rekordów. Sekcje 6–8 opisują całą sekwencję, łącznie z testem
+oglądanym już podczas wcześniejszej eksploracji i eksperymentów. Nie przywraca to
+niezależności testu. Kontrakt wyklucza `duration` i target z reprezentacji.
 
 Feature selection, numeric scaling, sampling count and sampling seed live in an
 **Apply geometry** form. On startup the baseline geometry runs once. Subsequently,
@@ -138,7 +138,7 @@ t-SNE settings. No predictive model is trained or tuned here.
 
 ## Chronological exploration
 
-The final section uses source-record order rather than fabricated calendar dates.
+Section 5 uses source-record order rather than fabricated calendar dates.
 Controls choose the trailing window length, equal-sized block count, numeric
 feature and categorical feature. The positive-rate curve uses complete trailing
 windows only. The numeric median and interquartile band omit missing values and
@@ -160,12 +160,40 @@ record counts, not equal durations. Hover and zoom inspect the curves without
 refitting PCA or t-SNE. Overlapping windows are dependent; trends and apparent
 cycles in row order do not establish calendar seasonality or causal effects.
 
+## Diagnostyka splitów i progów — Sprint 3
+
+Sekcja 6 pozwala porównać 64/16/20, bagging wewnątrz pierwszych 80% oraz trzy
+rozszerzające się foldy chronologiczne. Zewnętrzny test zawsze pozostaje końcowymi
+20%. Suwak validation oznacza procent development, więc domyślne 20% daje 16%
+całości. Wcześniejsze foldy chronologiczne pokazują nieużyty przyszły development
+na szaro. Losowe foldy są ilustracją stratyfikacji; AutoGluon zarządza własnym
+podziałem, a RF/XT mogą korzystać z OOB. Mapa próbuje do 1800 pozycji, lecz
+liczności, proporcje klas, Wilson i okno kroczące liczą się na wszystkich rekordach.
+
+Sekcja 7 porównuje rozkłady kategorii i wskazuje kategorie nieobecne w train.
+`unknown` i braki pozostają widoczne. Kolejność rekordów nie jest osią dat:
+nie odtwarzamy roku ani długości kampanii z `day` i `month`.
+
+Sekcja 8 czyta lokalne JSON-y OOF z `data/08_reporting/experiments`, bez W&B,
+AutoGluon i ponownego treningu. Wybiera najnowszy ukończony run dla każdego
+protokołu o zgodnym fingerprintcie danych i rozmiarze testu. Sprawdza indeksy,
+etykiety i prawdopodobieństwa; odrzuca rekordy końcowego testu. Wykresy pokazują
+F1 między oknami oraz precision, recall, F1 i macierz pomyłek przy wybranym progu.
+Maksimum F1 na tych samych OOF jest opisem doboru progu, nie niezależnym wynikiem.
+Zmiana splitu w sekcji 6 nie przelicza zapisanych eksperymentów w sekcji 8.
+Przy braku zgodnych artefaktów, np. dla próbki CI, panel wyników pokazuje komunikat;
+diagnostyka danych nadal działa. Kontrolki tych sekcji nie przeliczają PCA ani t-SNE.
+
+Na pełnych danych domyślny podział ma 28 934 / 7 234 / 9 043 rekordów i odpowiednio
+1 441 / 992 / 2 856 pozytywów (4,98% / 13,71% / 31,58%). To powód do sprawdzania
+stabilności między okresami, nie do przesuwania granicy w poszukiwaniu maksimum testu.
+
 ## Validation
 
 ```bash
 marimo check --strict notebooks/03_visual_exploration.py
 python notebooks/03_visual_exploration.py
-pytest -q tests/test_exploration.py
+pytest -q tests/test_exploration.py tests/test_split_exploration.py
 ```
 
 Set `ASI_DATA_MODE=sample` before the smoke check for a small run (PowerShell:
@@ -183,6 +211,14 @@ sample-mode execution, optional dependency setup/check, and file lint/format
 checks pass. Notebook 01 matches its committed version. Windows/macOS execution
 and remote CI are not verified by these local Linux results. Course CI does not
 need the optional marimo packages installed to run the test suite.
+
+Sprawdzenie rozszerzenia splitów (2026-11-24): 157 testów przeszło, w tym 23 nowe
+testy granic podziału, kategorii, progów i odczytu rzeczywistych JSON-ów OOF.
+`marimo check --strict`, Ruff i nieinteraktywny przebieg na próbce przeszły.
+W aktywnym kernelu sprawdzono protokoły, foldy, rozmiar validation, kategorię,
+próg oraz przełączenie próbka → pełne dane: bez błędów komórek. Zmiany kontrolek
+diagnostyki zachowały ten sam obiekt geometrii. Brak dostępnego podglądu
+przeglądarki nie pozwolił zweryfikować wizualnie układu nowych paneli.
 
 Official references: [marimo pair](https://docs.marimo.io/guides/generate_with_ai/marimo_pair/),
 [interactive controls](https://docs.marimo.io/guides/interactivity/),
