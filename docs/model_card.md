@@ -2,7 +2,7 @@
 
 Stan: **kandydat do pakowania, niezatwierdzony `production`** (24.11.2026).
 Opis dotyczy konkretnego modelu wskazanego poniżej; po wspólnej decyzji z Antonem
-trzeba dopisać wersję paczki i link W&B. [ADR-2](adr/0002-wybor-modelu.md) jest propozycją.
+trzeba dopisać wersję paczki i link do artefaktu modelu. [ADR-2](adr/0002-wybor-modelu.md) jest propozycją.
 
 ## Model i pochodzenie
 
@@ -17,8 +17,11 @@ trzeba dopisać wersję paczki i link W&B. [ADR-2](adr/0002-wybor-modelu.md) jes
 - SHA zapisany przez trening: `c66e7f81e3e8bb1aa3630e165b7f24c768250508`,
   `git_dirty=true`; sam SHA nie odtwarza całego ówczesnego kodu.
 - Wersje treningu: Python 3.11.17, scikit-learn 1.7.2, numpy 2.2.6, pandas 2.3.3.
-  Model jest lokalnym pickle z eksperymentów; paczka #20, jej wersja i W&B są jeszcze
-  niedostępne. Pełne pochodzenie i digest modelu: [raport JSON](notes/results/sprint-3-native-benchmark.json).
+  Model jest lokalnym pickle z eksperymentów; paczka #20 i jej wersja pozostają
+  do przygotowania. Pełne pochodzenie i digest modelu: [raport JSON](notes/results/sprint-3-native-benchmark.json).
+- [Run W&B tego modelu](https://wandb.ai/wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/runs/b4d90586db1e9551327d):
+  metryki i raporty zweryfikowane przez API. To raport eksperymentu, nie artefakt `production`.
+  Dostęp jest [tymczasowy](notes/sprint-3-wandb.md); wyniki zachowujemy także w repo.
 
 ## Przeznaczenie
 

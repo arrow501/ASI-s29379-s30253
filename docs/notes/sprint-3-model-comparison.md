@@ -104,9 +104,41 @@ benchmark, nie niezależny audyt generalizacji. Udział pozytywów rośnie: 6,73
 chronologiczna także ma duży rozrzut: F1 baseline w oknach to 0,1367 / 0,0977 / 0,2778.
 Losowy bagging miesza okresy development; jego OOF nie mierzy prognozy późniejszego okresu.
 
+## Powiązanie z W&B
+
+Tracking działa; w #18 zweryfikowano przez API metryki, konfigurację, provenance
+oraz raporty eksperymentów. [Konfiguracja i dowody](sprint-3-wandb.md) opisują też
+tymczasowy dostęp i możliwe opóźnienia lub błędy po stronie usługi.
+
+Poniższe runy są publikacją tych samych lokalnych źródeł, których używa benchmark:
+
+| Protokół | Model | Run W&B |
+| --- | --- | --- |
+| bagged | `baseline` | [run](https://wandb.ai/wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/runs/c2fb5ef969486935cd00) |
+| bagged | `catboost` | [run](https://wandb.ai/wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/runs/4474be9f1a3faff7e0f1) |
+| bagged | `gbm_large` | [run](https://wandb.ai/wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/runs/3302a90ddafe0d90454c) |
+| bagged | `gbm_small` | [run](https://wandb.ai/wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/runs/5536c33748089b85ce07) |
+| bagged | `tree_ensemble` | [run](https://wandb.ai/wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/runs/99cc2500407db9cca170) |
+| chronological | `baseline` | [run](https://wandb.ai/wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/runs/b4d90586db1e9551327d) |
+| chronological | `catboost` | [run](https://wandb.ai/wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/runs/3191cb2e35a0947d4ae4) |
+| chronological | `gbm_large` | [run](https://wandb.ai/wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/runs/0bc30bd94211b4991361) |
+| chronological | `gbm_small` | [run](https://wandb.ai/wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/runs/55008bdeb4eb197026bb) |
+| chronological | `tree_ensemble` | [run](https://wandb.ai/wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/runs/fa90ce6c2500d6447cb3) |
+
+Holdout w benchmarku pochodzi z `20261123T232543-holdout-6bf251c7`.
+Opublikowany holdout `20261124T161322-holdout-b410b77e` to osobny, ponowny trening;
+nie przypisujemy jego URL starszym artefaktom ani pomiarom kosztów. Komplet 17 runów
+jest w [rejestrze weryfikacji](sprint-3-wandb-runs.json).
+
+Zapisane `wandb_url=null` w historycznym JSON benchmarku oznacza stan w chwili
+pomiaru, przed publikacją. Zachowujemy ten raport bez zmian; powiązania powyżej
+uzupełniają jego pochodzenie. W&B zawiera raporty typu `experiment-report`;
+wersja paczki modelu i alias `production` pozostają częścią #20.
+
 ## Sprawdzenia
 
-Lokalnie przeszły **392 testy**, w tym **32 dla benchmarku**, oraz pre-commit dla
+Po połączeniu ze zmianami W&B z #18 przeszło **412 testów**, w tym **32 dla benchmarku**,
+oraz pre-commit dla
 zmienionych plików i kontrola diffu. Wszystkie 16 świeżych procesów odtworzyło zapisane
 metryki testu. Końcowe pomiary czasów wykonano po testach, bez równoległego uruchamiania
 pytest. CI na Windows/macOS nie zostało jeszcze uruchomione dla tej gałęzi.
@@ -119,5 +151,5 @@ pytest. CI na Windows/macOS nie zostało jeszcze uruchomione dla tej gałęzi.
   narzędziem eksperymentów, nie zastępuje implementacji #20.
 - Arrow i Anton: zatwierdzić albo zmienić rekomendację w ADR-2; dopiero wtedy oznaczyć
   Model Card jako finalną i przekazać identyfikator modelu do `production`.
-- Po naprawie W&B: dopisać prawdziwe linki do runów i artefaktu. Obecne `wandb_url=null`
-  oznacza brak publikacji. Nie ma jeszcze aliasu ani wersji `production`.
+- Po #20: dopisać konkretną wersję artefaktu modelu i alias `production`.
+  Linki do runów eksperymentów są już dostępne powyżej.

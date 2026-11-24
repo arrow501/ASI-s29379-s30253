@@ -10,7 +10,10 @@
 Potrzebujemy modelu ładowanego bez treningu w przyszłym API. Porównaliśmy regresję
 logistyczną i cztery konfiguracje AutoGluona na tym samym końcowym teście 9043 rekordów.
 Jakość i koszty natywnych artefaktów są w [raporcie #19](../notes/sprint-3-model-comparison.md).
-Test był już oglądany; nie uznajemy najwyższego testowego F1 za regułę nowej selekcji.
+Run rekomendowanego [baseline](https://wandb.ai/wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/runs/b4d90586db1e9551327d)
+i [GBM small](https://wandb.ai/wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/runs/55008bdeb4eb197026bb)
+zostały zweryfikowane przez API; pozostałe powiązania i różnicę między runami holdout
+opisuje raport #19. Test był już oglądany; nie uznajemy najwyższego testowego F1 za regułę nowej selekcji.
 
 ## Rozważone warianty
 
@@ -53,7 +56,7 @@ możliwość przenoszenia wyniku na inne okresy.
 Przed przyjęciem decyzji potrzebne są review Antona, zgoda obu osób i pomiary przez
 wspólny loader na faktycznych paczkach (baseline + minimum dwa AutoGluony).
 Rozmiary katalogów natywnych i RSS backendów nie opisują jeszcze paczki wdrożeniowej.
-Następnie uzupełniamy W&B, wersję artefaktu i finalną [Model Card](../model_card.md).
+Następnie publikujemy paczkę w W&B, zapisujemy jej wersję i finalizujemy [Model Card](../model_card.md).
 
 ## Historia
 
