@@ -217,8 +217,7 @@ testy granic podziału, kategorii, progów i odczytu rzeczywistych JSON-ów OOF.
 `marimo check --strict`, Ruff i nieinteraktywny przebieg na próbce przeszły.
 W aktywnym kernelu sprawdzono protokoły, foldy, rozmiar validation, kategorię,
 próg oraz przełączenie próbka → pełne dane: bez błędów komórek. Zmiany kontrolek
-diagnostyki zachowały ten sam obiekt geometrii. Brak dostępnego podglądu
-przeglądarki nie pozwolił zweryfikować wizualnie układu nowych paneli.
+diagnostyki zachowały ten sam obiekt geometrii.
 
 Official references: [marimo pair](https://docs.marimo.io/guides/generate_with_ai/marimo_pair/),
 [interactive controls](https://docs.marimo.io/guides/interactivity/),

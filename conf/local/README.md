@@ -1,6 +1,6 @@
 # conf/local
 
-> Scaffold for Sprint 2 — do not implement before this sprint.
-
-Konfiguracja lokalna konkretnego komputera, np. poświadczenia. Poza tym plikiem zawartość
-katalogu jest ignorowana przez git — sekretów nie commitujemy.
+Lokalne nadpisania konfiguracji Kedro. Poza tym plikiem zawartość katalogu jest
+ignorowana przez Git. Klucza W&B nie umieszczamy w parametrach Kedro: używamy
+`wandb login` albo zmiennej `WANDB_API_KEY`. Konfiguracja i tymczasowy dostęp:
+[notatka W&B](../../docs/notes/sprint-3-wandb.md).

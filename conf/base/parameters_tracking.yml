@@ -1,3 +1,4 @@
+# Tymczasowy projekt udostępniony przez prowadzącą; docelowo własny projekt zespołu.
 # Bez sekretów; WANDB_MODE / WANDB_ENTITY / WANDB_PROJECT nadpisują te wartości.
 tracking:
   mode: disabled
