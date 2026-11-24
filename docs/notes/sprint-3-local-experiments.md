@@ -1,7 +1,7 @@
 # Sprint 3 — eksperymenty lokalne (#18)
 
-Owner: Arrow; review: Anton. Zakres obejmuje trening i lokalne raporty bez W&B,
-kont i sieci. Publikacja runów W&B pozostaje osobnym brakującym elementem #18.
+Owner: Arrow; review: Anton. Domyślny tryb obejmuje trening i lokalne raporty bez kont
+i sieci. Opcjonalny tracking i komendy publikacji: [sprint-3-wandb.md](sprint-3-wandb.md).
 Domyślny `kedro run` nadal odtwarza baseline S2 (80/20); eksperymenty są osobnymi pipeline’ami.
 
 ## Trzy aktywne protokoły
@@ -40,6 +40,9 @@ flowchart LR
 Etapy są osobnymi nodami Kedro. Dopiero `freeze_validation_decision` tworzy
 `selection.json` z modelem, ścieżkami i progami **wszystkich** kandydatów.
 `evaluate_frozen_test` korzysta z tego snapshotu, a nie z mutowalnego raportu treningu.
+Ostatni node `track_experiment` publikuje gotowe wyniki tylko w trybie online/offline;
+przy `disabled` pomija SDK. Końcowym wyjściem runnera jest `experiment_tracking`,
+a decyzja i test pozostają zapisane jako pliki JSON.
 Niezgodne dane, konfiguracja lub zmieniony snapshot blokują test. Ponowna selekcja
 lub nadpisanie raportu testowego tego samego runu są odrzucane.
 Przed podziałem testowym i ładowaniem modelu wspólny `assert_prepared_data` sprawdza,
@@ -131,12 +134,15 @@ klasyfikacyjnej; nie usuwają dryfu między okresami.
 
 ## Sprawdzenia
 
-Po poprawkach review: **328 testów przeszło w osobnym checkoutcie bez lokalnych ustawień**,
-także z zewnętrzną konfiguracją wymuszającą niedziałające podpisywanie GPG.
-Przeszły pre-commit, lint/format i kontrola diffu. Ponowiono trzy pełne przebiegi
+Aktualny stan z trackingiem: **380 testów przeszło w czystym checkoutcie `b6ecf55`**,
+bez lokalnych ustawień; przeszły również pre-commit i kontrola diffu. Testy Git zachowują
+izolację od lokalnego podpisywania i hooków. Po review ponowiono trzy pełne przebiegi
 AutoGluona: wyniki F1 i wybory modeli pozostały zgodne z tabelą. Identyfikatory runów:
 `20261123T232543-holdout-6bf251c7`, `20261123T232543-bagged-c7e1b345`,
 `20261123T232543-chronological-3d2c20c4`.
+Świeży holdout z W&B: `20261124T161322-holdout-b410b77e`; F1 pozostały zgodne z tabelą.
+Pierwszy run W&B odtworzył baseline S2 przy progu 0,5. Linki i potwierdzenie 17 runów
+są w [notatce W&B](sprint-3-wandb.md).
 
 Graf i wejścia nodów: [`pipeline.py`](../../src/asi_project/pipelines/experiments/pipeline.py).
 Podział odpowiedzialności: `splits.py` — granice/foldy, `models.py` — adaptery,

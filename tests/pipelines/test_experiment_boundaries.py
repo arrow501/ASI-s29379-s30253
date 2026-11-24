@@ -102,20 +102,25 @@ def test_graph_makes_selection_before_test_explicit(protocol, prepare, train):
         train,
         "freeze_validation_decision",
         "evaluate_frozen_test",
+        "track_experiment",
     ]
     training = pipeline.nodes[1]
     assert "prepared_data" not in training.inputs
     assert "raw_data" in training.inputs  # Fingerprint only; actual fit uses prepared partitions.
-    test = pipeline.nodes[-1]
+    test = pipeline.nodes[-2]
     assert "experiment_selection" in test.inputs and "experiment_report" not in test.inputs
-    assert [n.name for n in create_pipeline(protocol).nodes][-1] == "freeze_validation_decision"
+    assert [n.name for n in create_pipeline(protocol).nodes][-2:] == [
+        "freeze_validation_decision",
+        "track_experiment",
+    ]
 
 
-def test_removed_online_pipeline_is_not_registered():
+def test_registered_pipelines_keep_baseline_tracking_explicit():
     from asi_project.pipeline_registry import register_pipelines
 
     assert set(register_pipelines()) == {
         "data_processing",
+        "baseline_tracked",
         "data_science",
         "__default__",
         "experiments",

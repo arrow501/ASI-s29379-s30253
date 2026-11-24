@@ -2,6 +2,8 @@
 
 from kedro.pipeline import Pipeline, node
 
+from asi_project.tracking import track_experiment
+
 from .cross_validation import train_cross_validated_models
 from .evaluation import evaluate_test, freeze_selection
 from .nodes import train_holdout_models
@@ -96,4 +98,10 @@ def create_pipeline(protocol="holdout", include_test=False):
                 )
             ]
         )
+    tracking_inputs = {"selection": "experiment_selection", "tracking": "params:tracking"}
+    if include_test:
+        tracking_inputs["tested"] = "experiment_test_report"
+    pipeline += Pipeline(
+        [node(track_experiment, tracking_inputs, "experiment_tracking", name="track_experiment")]
+    )
     return pipeline

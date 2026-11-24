@@ -43,6 +43,7 @@ def test_real_kedro_graph_persists_decision_and_optional_test_without_sdks(
         },
         "params:validation_protocols": {"bagging_folds": 5, "chronological_folds": 3},
         "params:reporting.data_mode": "sample",
+        "params:tracking": {"mode": "disabled", "entity": None, "project": None},
     }.items():
         catalog[key] = MemoryDataset(data=value)
     pipeline = register_pipelines()[name + ("_test" if include_test else "")]
@@ -67,7 +68,7 @@ def test_real_kedro_graph_persists_decision_and_optional_test_without_sdks(
                 tested["results"][candidate]["decision_threshold"]
                 == selection["candidates"][candidate]["decision_threshold"]
             )
-        assert "experiment_test_report" in outputs
+        assert "experiment_tracking" in outputs
     else:
         assert not (root / "test_metrics.json").exists()
-        assert "experiment_selection" in outputs
+        assert "experiment_tracking" in outputs

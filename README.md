@@ -243,6 +243,7 @@ Lokalne eksperymenty Sprintu 3 — holdout, bagging i foldy chronologiczne:
 [komendy, kontrakt wyników i ograniczenia](docs/notes/sprint-3-local-experiments.md).
 Porównanie jakości i kosztów modeli: [raport #19](docs/notes/sprint-3-model-comparison.md)
 i [propozycja ADR-2](docs/adr/0002-wybor-modelu.md).
+Opcjonalne logowanie eksperymentów: [W&B — tymczasowy dostęp, konfiguracja i ponowienia](docs/notes/sprint-3-wandb.md).
 
 ## Definition of Done Sprintu 1
 

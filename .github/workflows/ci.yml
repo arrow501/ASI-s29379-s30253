@@ -10,6 +10,7 @@ permissions:
 
 env:
   KEDRO_DISABLE_TELEMETRY: "1"
+  WANDB_MODE: "disabled"
   PYTHONUTF8: "1"
 
 concurrency:

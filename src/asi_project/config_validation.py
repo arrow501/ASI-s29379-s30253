@@ -99,3 +99,7 @@ def validate_run_parameters(params: dict[str, Any], contract: DatasetContract) -
     validate_project_parameters(params.get("project"), contract)
     validate_training_parameters(params.get("training"))
     validate_reporting_parameters(params.get("reporting"))
+    if "tracking" in params:
+        from asi_project.tracking import tracking_settings
+
+        tracking_settings(params["tracking"])
