@@ -1,0 +1,4 @@
+# Optional interactive EDA; install into asi-ml with -c constraints.txt.
+marimo==0.25.2
+plotly==7.1.0
+anywidget==0.11.0

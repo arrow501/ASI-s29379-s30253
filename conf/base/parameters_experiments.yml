@@ -1,0 +1,26 @@
+# S3: lokalne eksperymenty; wybór konfiguracji wyłącznie na validation.
+experiments:
+  autogluon_enabled: true
+  num_cpus: 8
+  stopping_metric: log_loss
+  threshold_mode: validation_f1
+  candidates:
+    - name: gbm_small
+      time_limit: 120
+      hyperparameters:
+        GBM: {num_leaves: 15, learning_rate: 0.05, num_boost_round: 400}
+    - name: gbm_large
+      time_limit: 120
+      hyperparameters:
+        GBM: {num_leaves: 63, learning_rate: 0.03, num_boost_round: 1000}
+    - name: catboost
+      time_limit: 120
+      hyperparameters:
+        CAT: {depth: 6, iterations: 600}
+    - name: tree_ensemble
+      time_limit: 120
+      hyperparameters:
+        GBM: {num_leaves: 31, num_boost_round: 600}
+        CAT: {depth: 6, iterations: 600}
+        RF: {n_estimators: 200}
+        XT: {n_estimators: 200}

@@ -120,8 +120,8 @@ Najważniejsze pliki Sprintu 1:
 | Plik | Kto edytuje | Po co |
 |---|---|---|
 | `project.yaml` | zespół | wybrany dataset, typy cech, parametry splitu |
-| `src/asi_project/data.py` | zespół (miejsca oznaczone TODO) | input normalization i training-only filtering |
-| `src/asi_project/model.py` | zespół (TODO) | sklearn Pipeline z model preprocessing |
+| `src/asi_project/data.py` | zespół | input normalization i training-only filtering |
+| `src/asi_project/model.py` | zespół | sklearn Pipeline z model preprocessing |
 | `notebooks/01_eda.ipynb` | zespół | EDA i decyzje o danych |
 | `notebooks/02_baseline.ipynb` | zespół | baseline i `metrics.json` |
 | `docs/architecture.md` | zespół | diagram v0 systemu docelowego |
@@ -172,6 +172,29 @@ Linuksie, Windowsie i macOS z Pythonem 3.11. Parametry i nadpisania opisuje
 [konfiguracja Kedro](docs/notes/sprint-2-interfaces.md), a połączenie obu pipeline’ów
 [handoff S2-2/S2-3](docs/notes/sprint-2-handoff.md).
 
+## Visual exploration — marimo (opcjonalne)
+
+To opcjonalne narzędzie poza sylabusem. Nie jest potrzebne do wymaganych notebooków
+ani pipeline'u Kedro. W aktywnym środowisku `asi-ml` pierwsze uruchomienie:
+
+```bash
+python scripts/visual_exploration.py --setup --sample
+```
+
+Jedna komenda instaluje przypięte dodatki, udostępnia lokalny pakiet projektu i
+otwiera marimo na próbce zapisanej w repo — bez pobierania pełnych danych.
+Kolejne uruchomienia: `python scripts/visual_exploration.py`.
+W VS Code dostępne są zadania **ASI: set up visual exploration (optional)**
+i **ASI: visual exploration (marimo, asi-ml)**.
+
+Notebook 03 zawiera PCA z płynną rotacją, hover, zaznaczanie regionów, t-SNE,
+wykresy chronologiczne i boczny spis treści. Używa wcześniejszych 80% danych, bez
+treningu modelu. Bez `--sample` wybiera pełne dane, jeśli są lokalnie dostępne;
+w przeciwnym razie próbkę CI. Serwer nasłuchuje tylko lokalnie.
+Notebooki 01 i 02 pozostają w swoim oryginalnym formacie.
+Instrukcje przejęcia przez marimo-pair i opis matematyki:
+[Visual exploration](docs/notes/visual-exploration.md).
+
 ## Gałęzie, Pull Requesty i review
 
 - Gałąź `main` jest chroniona. Każda zmiana trafia przez gałąź i Pull Request.
@@ -215,7 +238,10 @@ CI (GitHub Actions, `.github/workflows/ci.yml`) przy każdym pushu do `main` i k
    próbce CI i sprawdza wynik;
 5. publikuje raport Definition of Done w podsumowaniu joba.
 
-CI nie korzysta z sekretów, W&B ani AutoGluona.
+CI nie korzysta z sekretów ani eksperymentów W&B/AutoGluona online.
+Lokalne eksperymenty Sprintu 3 — holdout, bagging i foldy chronologiczne:
+[komendy, kontrakt wyników i ograniczenia](docs/notes/sprint-3-local-experiments.md).
+Opcjonalne logowanie eksperymentów: [W&B — tymczasowy dostęp, konfiguracja i ponowienia](docs/notes/sprint-3-wandb.md).
 
 ## Definition of Done Sprintu 1
 

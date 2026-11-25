@@ -1,0 +1,328 @@
+{
+  "project_url": "https://wandb.ai/wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253",
+  "verified_runs": [
+    {
+      "local_run_id": "20261124T160532-s2_baseline-f57fd319",
+      "candidate": "s2_baseline",
+      "url": "https://wandb.ai/wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/runs/db312c065316ac07e52a",
+      "state": "finished",
+      "metrics_verified": 16,
+      "report_files_verified": [
+        "config.json",
+        "provenance.json",
+        "s2_metrics.json"
+      ],
+      "git_sha": "23ee966a58ac77439fc27b04240b4b60025bda7b",
+      "git_dirty": true,
+      "data_fingerprint": "2a81c082b2a35c24ae36ba337231bd88e4a417d0a5e02346169078fac5a92253",
+      "publication": "fresh_pipeline"
+    },
+    {
+      "local_run_id": "20261124T161322-holdout-b410b77e",
+      "candidate": "baseline",
+      "url": "https://wandb.ai/wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/runs/206aff6fc467a9667f79",
+      "state": "finished",
+      "metrics_verified": 43,
+      "report_files_verified": [
+        "config.json",
+        "metrics.json",
+        "provenance.json",
+        "selection.json",
+        "split.json",
+        "test_metrics.json"
+      ],
+      "git_sha": "23ee966a58ac77439fc27b04240b4b60025bda7b",
+      "git_dirty": true,
+      "data_fingerprint": "2a81c082b2a35c24ae36ba337231bd88e4a417d0a5e02346169078fac5a92253",
+      "publication": "fresh_pipeline"
+    },
+    {
+      "local_run_id": "20261124T161322-holdout-b410b77e",
+      "candidate": "catboost",
+      "url": "https://wandb.ai/wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/runs/410e5fb5b84363305cb0",
+      "state": "finished",
+      "metrics_verified": 44,
+      "report_files_verified": [
+        "config.json",
+        "metrics.json",
+        "provenance.json",
+        "selection.json",
+        "split.json",
+        "test_metrics.json"
+      ],
+      "git_sha": "23ee966a58ac77439fc27b04240b4b60025bda7b",
+      "git_dirty": true,
+      "data_fingerprint": "2a81c082b2a35c24ae36ba337231bd88e4a417d0a5e02346169078fac5a92253",
+      "publication": "fresh_pipeline"
+    },
+    {
+      "local_run_id": "20261124T161322-holdout-b410b77e",
+      "candidate": "dummy",
+      "url": "https://wandb.ai/wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/runs/7ccc579043d9413f93bc",
+      "state": "finished",
+      "metrics_verified": 42,
+      "report_files_verified": [
+        "config.json",
+        "metrics.json",
+        "provenance.json",
+        "selection.json",
+        "split.json",
+        "test_metrics.json"
+      ],
+      "git_sha": "23ee966a58ac77439fc27b04240b4b60025bda7b",
+      "git_dirty": true,
+      "data_fingerprint": "2a81c082b2a35c24ae36ba337231bd88e4a417d0a5e02346169078fac5a92253",
+      "publication": "fresh_pipeline"
+    },
+    {
+      "local_run_id": "20261124T161322-holdout-b410b77e",
+      "candidate": "gbm_large",
+      "url": "https://wandb.ai/wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/runs/4a3e554d38e7995f75d4",
+      "state": "finished",
+      "metrics_verified": 44,
+      "report_files_verified": [
+        "config.json",
+        "metrics.json",
+        "provenance.json",
+        "selection.json",
+        "split.json",
+        "test_metrics.json"
+      ],
+      "git_sha": "23ee966a58ac77439fc27b04240b4b60025bda7b",
+      "git_dirty": true,
+      "data_fingerprint": "2a81c082b2a35c24ae36ba337231bd88e4a417d0a5e02346169078fac5a92253",
+      "publication": "fresh_pipeline"
+    },
+    {
+      "local_run_id": "20261124T161322-holdout-b410b77e",
+      "candidate": "gbm_small",
+      "url": "https://wandb.ai/wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/runs/c355b76ada19c9d2fd47",
+      "state": "finished",
+      "metrics_verified": 44,
+      "report_files_verified": [
+        "config.json",
+        "metrics.json",
+        "provenance.json",
+        "selection.json",
+        "split.json",
+        "test_metrics.json"
+      ],
+      "git_sha": "23ee966a58ac77439fc27b04240b4b60025bda7b",
+      "git_dirty": true,
+      "data_fingerprint": "2a81c082b2a35c24ae36ba337231bd88e4a417d0a5e02346169078fac5a92253",
+      "publication": "fresh_pipeline"
+    },
+    {
+      "local_run_id": "20261124T161322-holdout-b410b77e",
+      "candidate": "tree_ensemble",
+      "url": "https://wandb.ai/wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/runs/a6e7f424834222038bca",
+      "state": "finished",
+      "metrics_verified": 44,
+      "report_files_verified": [
+        "config.json",
+        "metrics.json",
+        "provenance.json",
+        "selection.json",
+        "split.json",
+        "test_metrics.json"
+      ],
+      "git_sha": "23ee966a58ac77439fc27b04240b4b60025bda7b",
+      "git_dirty": true,
+      "data_fingerprint": "2a81c082b2a35c24ae36ba337231bd88e4a417d0a5e02346169078fac5a92253",
+      "publication": "fresh_pipeline"
+    },
+    {
+      "local_run_id": "20261123T232543-bagged-c7e1b345",
+      "candidate": "baseline",
+      "url": "https://wandb.ai/wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/runs/c2fb5ef969486935cd00",
+      "state": "finished",
+      "metrics_verified": 39,
+      "report_files_verified": [
+        "config.json",
+        "folds.json",
+        "metrics.json",
+        "provenance.json",
+        "selection.json",
+        "test_metrics.json"
+      ],
+      "git_sha": "c66e7f81e3e8bb1aa3630e165b7f24c768250508",
+      "git_dirty": true,
+      "data_fingerprint": "2a81c082b2a35c24ae36ba337231bd88e4a417d0a5e02346169078fac5a92253",
+      "publication": "replayed_local_results"
+    },
+    {
+      "local_run_id": "20261123T232543-bagged-c7e1b345",
+      "candidate": "catboost",
+      "url": "https://wandb.ai/wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/runs/4474be9f1a3faff7e0f1",
+      "state": "finished",
+      "metrics_verified": 40,
+      "report_files_verified": [
+        "config.json",
+        "folds.json",
+        "metrics.json",
+        "provenance.json",
+        "selection.json",
+        "test_metrics.json"
+      ],
+      "git_sha": "c66e7f81e3e8bb1aa3630e165b7f24c768250508",
+      "git_dirty": true,
+      "data_fingerprint": "2a81c082b2a35c24ae36ba337231bd88e4a417d0a5e02346169078fac5a92253",
+      "publication": "replayed_local_results"
+    },
+    {
+      "local_run_id": "20261123T232543-bagged-c7e1b345",
+      "candidate": "gbm_large",
+      "url": "https://wandb.ai/wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/runs/3302a90ddafe0d90454c",
+      "state": "finished",
+      "metrics_verified": 40,
+      "report_files_verified": [
+        "config.json",
+        "folds.json",
+        "metrics.json",
+        "provenance.json",
+        "selection.json",
+        "test_metrics.json"
+      ],
+      "git_sha": "c66e7f81e3e8bb1aa3630e165b7f24c768250508",
+      "git_dirty": true,
+      "data_fingerprint": "2a81c082b2a35c24ae36ba337231bd88e4a417d0a5e02346169078fac5a92253",
+      "publication": "replayed_local_results"
+    },
+    {
+      "local_run_id": "20261123T232543-bagged-c7e1b345",
+      "candidate": "gbm_small",
+      "url": "https://wandb.ai/wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/runs/5536c33748089b85ce07",
+      "state": "finished",
+      "metrics_verified": 40,
+      "report_files_verified": [
+        "config.json",
+        "folds.json",
+        "metrics.json",
+        "provenance.json",
+        "selection.json",
+        "test_metrics.json"
+      ],
+      "git_sha": "c66e7f81e3e8bb1aa3630e165b7f24c768250508",
+      "git_dirty": true,
+      "data_fingerprint": "2a81c082b2a35c24ae36ba337231bd88e4a417d0a5e02346169078fac5a92253",
+      "publication": "replayed_local_results"
+    },
+    {
+      "local_run_id": "20261123T232543-bagged-c7e1b345",
+      "candidate": "tree_ensemble",
+      "url": "https://wandb.ai/wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/runs/99cc2500407db9cca170",
+      "state": "finished",
+      "metrics_verified": 40,
+      "report_files_verified": [
+        "config.json",
+        "folds.json",
+        "metrics.json",
+        "provenance.json",
+        "selection.json",
+        "test_metrics.json"
+      ],
+      "git_sha": "c66e7f81e3e8bb1aa3630e165b7f24c768250508",
+      "git_dirty": true,
+      "data_fingerprint": "2a81c082b2a35c24ae36ba337231bd88e4a417d0a5e02346169078fac5a92253",
+      "publication": "replayed_local_results"
+    },
+    {
+      "local_run_id": "20261123T232543-chronological-3d2c20c4",
+      "candidate": "baseline",
+      "url": "https://wandb.ai/wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/runs/b4d90586db1e9551327d",
+      "state": "finished",
+      "metrics_verified": 39,
+      "report_files_verified": [
+        "config.json",
+        "folds.json",
+        "metrics.json",
+        "provenance.json",
+        "selection.json",
+        "test_metrics.json"
+      ],
+      "git_sha": "c66e7f81e3e8bb1aa3630e165b7f24c768250508",
+      "git_dirty": true,
+      "data_fingerprint": "2a81c082b2a35c24ae36ba337231bd88e4a417d0a5e02346169078fac5a92253",
+      "publication": "replayed_local_results"
+    },
+    {
+      "local_run_id": "20261123T232543-chronological-3d2c20c4",
+      "candidate": "catboost",
+      "url": "https://wandb.ai/wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/runs/3191cb2e35a0947d4ae4",
+      "state": "finished",
+      "metrics_verified": 40,
+      "report_files_verified": [
+        "config.json",
+        "folds.json",
+        "metrics.json",
+        "provenance.json",
+        "selection.json",
+        "test_metrics.json"
+      ],
+      "git_sha": "c66e7f81e3e8bb1aa3630e165b7f24c768250508",
+      "git_dirty": true,
+      "data_fingerprint": "2a81c082b2a35c24ae36ba337231bd88e4a417d0a5e02346169078fac5a92253",
+      "publication": "replayed_local_results"
+    },
+    {
+      "local_run_id": "20261123T232543-chronological-3d2c20c4",
+      "candidate": "gbm_large",
+      "url": "https://wandb.ai/wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/runs/0bc30bd94211b4991361",
+      "state": "finished",
+      "metrics_verified": 40,
+      "report_files_verified": [
+        "config.json",
+        "folds.json",
+        "metrics.json",
+        "provenance.json",
+        "selection.json",
+        "test_metrics.json"
+      ],
+      "git_sha": "c66e7f81e3e8bb1aa3630e165b7f24c768250508",
+      "git_dirty": true,
+      "data_fingerprint": "2a81c082b2a35c24ae36ba337231bd88e4a417d0a5e02346169078fac5a92253",
+      "publication": "replayed_local_results"
+    },
+    {
+      "local_run_id": "20261123T232543-chronological-3d2c20c4",
+      "candidate": "gbm_small",
+      "url": "https://wandb.ai/wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/runs/55008bdeb4eb197026bb",
+      "state": "finished",
+      "metrics_verified": 40,
+      "report_files_verified": [
+        "config.json",
+        "folds.json",
+        "metrics.json",
+        "provenance.json",
+        "selection.json",
+        "test_metrics.json"
+      ],
+      "git_sha": "c66e7f81e3e8bb1aa3630e165b7f24c768250508",
+      "git_dirty": true,
+      "data_fingerprint": "2a81c082b2a35c24ae36ba337231bd88e4a417d0a5e02346169078fac5a92253",
+      "publication": "replayed_local_results"
+    },
+    {
+      "local_run_id": "20261123T232543-chronological-3d2c20c4",
+      "candidate": "tree_ensemble",
+      "url": "https://wandb.ai/wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/runs/fa90ce6c2500d6447cb3",
+      "state": "finished",
+      "metrics_verified": 40,
+      "report_files_verified": [
+        "config.json",
+        "folds.json",
+        "metrics.json",
+        "provenance.json",
+        "selection.json",
+        "test_metrics.json"
+      ],
+      "git_sha": "c66e7f81e3e8bb1aa3630e165b7f24c768250508",
+      "git_dirty": true,
+      "data_fingerprint": "2a81c082b2a35c24ae36ba337231bd88e4a417d0a5e02346169078fac5a92253",
+      "publication": "replayed_local_results"
+    }
+  ],
+  "verified_utc": "2026-11-24T16:21:36.724920+00:00",
+  "wandb_version": "0.30.0",
+  "first_run_is_s2_baseline": true
+}

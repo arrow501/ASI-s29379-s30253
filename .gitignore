@@ -30,7 +30,9 @@ dist/
 .pytest_cache/
 .ruff_cache/
 .ipynb_checkpoints/
+__marimo__/
 .venv/
+wandb/
 
 # --- Systemowe / edytory ---------------------------------------------------
 .DS_Store
