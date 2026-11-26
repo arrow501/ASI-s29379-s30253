@@ -242,7 +242,7 @@ CI nie korzysta z sekretów ani eksperymentów W&B/AutoGluona online.
 Lokalne eksperymenty Sprintu 3 — holdout, bagging i foldy chronologiczne:
 [komendy, kontrakt wyników i ograniczenia](docs/notes/sprint-3-local-experiments.md).
 Porównanie jakości i kosztów modeli: [raport #19](docs/notes/sprint-3-model-comparison.md)
-i [propozycja ADR-2](docs/adr/0002-wybor-modelu.md).
+i [decyzja ADR-2](docs/adr/0002-wybor-modelu.md).
 Opcjonalne logowanie eksperymentów: [W&B — tymczasowy dostęp, konfiguracja i ponowienia](docs/notes/sprint-3-wandb.md).
 Zapis pakietu z gotowego eksperymentu, publikacja W&B Artifact, pobranie i predykcja bez treningu:
 [komendy obsługi pakietu](src/asi_project/README.md#komendy-obsługi-pakietu).

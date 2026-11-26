@@ -1,65 +1,83 @@
 # ADR-2: Wybór modelu do Sprintu 4
 
-- **Status:** propozycja — oczekuje wspólnej decyzji i pomiarów paczki z #20
+- **Status:** przyjęty 26.11.2026 — wybór zaakceptowany przez Arrow i Antona
 - **Sprint:** S3 / #19
 - **Autor:** Arrow (`arrow501`, s29379)
-- **Recenzent:** Anton (`sanderJa`, s30253); review jeszcze niewykonane
+- **Recenzent:** Anton (`sanderJa`, s30253)
 
 ## Kontekst
 
-Potrzebujemy modelu ładowanego bez treningu w przyszłym API. Porównaliśmy regresję
-logistyczną i cztery konfiguracje AutoGluona na tym samym końcowym teście 9043 rekordów.
-Jakość i koszty natywnych artefaktów są w [raporcie #19](../notes/sprint-3-model-comparison.md).
-Run rekomendowanego [baseline](https://wandb.ai/wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/runs/b4d90586db1e9551327d)
-i [GBM small](https://wandb.ai/wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/runs/55008bdeb4eb197026bb)
-zostały zweryfikowane przez API; pozostałe powiązania i różnicę między runami holdout
-opisuje raport #19. Test był już oglądany; nie uznajemy najwyższego testowego F1 za regułę nowej selekcji.
+API w Sprincie 4 potrzebuje modelu, który można wczytać i użyć bez treningu.
+Porównaliśmy regresję logistyczną i cztery konfiguracje AutoGluona w trzech
+protokołach: holdout 64/16/20, losowy bagging 80/20 oraz okna chronologiczne.
+Oprócz jakości uwzględniamy czas predykcji, rozmiar pakietu i pamięć procesu.
+Pełne wyniki i metodę pomiaru opisuje [raport #19](../notes/sprint-3-model-comparison.md).
 
-## Rozważone warianty
+## Decyzja
 
-| Wariant | Wybór przed testem | F1 na teście | Natywny rozmiar |
-| --- | --- | ---: | ---: |
-| Baseline, chronologiczne okna i refit 80% | zwycięzca: średnie F1 okien 0,1707 | 0,5210 | 4,56 KiB |
-| GBM small, ten sam protokół | średnie F1 okien 0,1688 | 0,4923 | ok. 3,15 MiB |
-| Tree ensemble, holdout 64/16/20 | zwycięzca validation F1 0,3208 | 0,1737 | ok. 216 MiB |
-| Tree ensemble, losowy bagging 80/20 | zwycięzca OOF | 0,4976 | ok. 313 MiB |
+Wybieramy regresję logistyczną `baseline` z runu
+`20261123T232543-chronological-3d2c20c4`
+([run W&B](https://wandb.ai/wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/runs/b4d90586db1e9551327d)).
+Model wybrano według średniego F1 trzech okien chronologicznych, a następnie
+ponownie dopasowano na pierwszych 80% danych (36 168 rekordów).
+Próg `0.07166958577186548` dobrano na predykcjach walidacyjnych i zamrożono przed testem.
 
-Pozostałe modele i pełne czasy/RSS są w tabelach raportu. Holdout GBM small osiąga
-0,5390 na teście, ale nie wygrał selekcji validation. Same wyniki testu nie upoważniają
-do zmiany protokołu. Losowy bagging jest użytecznym porównaniem, lecz miesza okresy
-wewnątrz development i słabiej odpowiada predykcji kolejnych kontaktów.
+Do API przekazujemy pakiet z #20: sklearn Pipeline z dopasowanym preprocessingiem
+oraz metadane opisujące cechy, etykiety, próg, wersje i pochodzenie modelu.
+API korzysta ze wspólnego loadera i predykcji, z regułą:
 
-## Propozycja decyzji
+```text
+P(y=yes) >= 0.07166958577186548 → yes
+```
 
-Do pakowania rekomendujemy `baseline` z runu
-`20261123T232543-chronological-3d2c20c4`: model wybrany przez chronologiczne okna,
-refit na 36 168 rekordach i próg **0,07166958577186548** zamrożony przed testem.
-Różnica walidacyjna względem GBM small jest mała. Za baseline przemawia także
-mały artefakt i prosty sklearn Pipeline; nie wymaga AutoGluona do inferencji.
+Nie korzystamy z domyślnego `predict()` estymatora: stosuje próg 0,5, który dla
+tego modelu daje F1 0,2238 zamiast 0,5210. Próg jest częścią wybranego modelu.
 
-Reguła predykcji to `P(y=1) >= decision_threshold`. Natywne `predict()` baseline
-stosuje 0,5 i daje tu inne wyniki (F1 0,2238), dlatego próg musi być częścią metadanych
-pakietu i kontraktu wspólnego loadera.
+## Uzasadnienie i alternatywy
 
-Docelowa postać to paczka z #20: model wraz z preprocessingiem, konfiguracją cech,
-klasą pozytywną, progiem, wersjami i pochodzeniem. Format oraz wspólny zapis/odczyt
-implementuje Anton. Niniejszy ADR nie ustala za niego layoutu plików.
-Po wspólnym zatwierdzeniu paczka otrzyma alias `production`; publikacji jeszcze nie ma.
+Chronologiczna walidacja odpowiada przewidywaniu wyników późniejszych kontaktów:
+każde okno jest oceniane po treningu wyłącznie na wcześniejszych rekordach.
+Baseline uzyskał średnie F1 okien **0,1707**, a GBM small **0,1688**.
+Ta różnica jest mała; sama nie dowodzi przewagi jakościowej. Za baseline przemawiają
+również mały pakiet, niższy koszt pojedynczej predykcji i brak zależności od AutoGluona
+podczas inferencji.
 
-## Konsekwencje i warunki zatwierdzenia
+| Model, okna chronologiczne | F1 testu | Pakiet [B] | 1 rekord [ms] | RSS po rozgrzewce [MiB] |
+| --- | ---: | ---: | ---: | ---: |
+| Baseline | 0,5210 | 6406 | 2,83 | 185,8 |
+| GBM small | 0,4923 | 142 284 | 4,82 | 213,4 |
 
-Baseline ma recall 0,7630, ale precision 0,3955: 3330 false positives i 677 false
-negatives na teście. Użycie progu maksymalizującego F1 nie jest optymalizacją kosztu
-kampanii; tych kosztów nie oszacowaliśmy. Wzrost udziału pozytywów w teście ogranicza
-możliwość przenoszenia wyniku na inne okresy.
+GBM small jest szybszy dla całego batcha 9043 rekordów: **17,33 ms** wobec
+**23,72 ms** baseline’u. Wybrany model lepiej odpowiada jednak obsłudze pojedynczych
+zapytań w planowanym API. Czasy są lokalnymi medianami, bez HTTP; RSS obejmuje
+cały proces z bibliotekami, a nie sam model.
+[Pomiary pięciu pakietów](../notes/results/sprint-3-package-benchmark.md) wykonano
+przez loader #20 (`7bfd06f`); wszystkie zachowały prawdopodobieństwa oryginałów.
 
-Przed przyjęciem decyzji potrzebne są review Antona, zgoda obu osób i pomiary przez
-wspólny loader na faktycznych paczkach (baseline + minimum dwa AutoGluony).
-Rozmiary katalogów natywnych i RSS backendów nie opisują jeszcze paczki wdrożeniowej.
-Następnie publikujemy paczkę w W&B, zapisujemy jej wersję i finalizujemy [Model Card](../model_card.md).
+Rozważyliśmy też inne protokoły. W holdout GBM small osiągnął testowe F1 0,5390,
+ale selekcję walidacyjną wygrał tree ensemble (testowe F1 0,1737).
+Tree ensemble wybrany przez losowy bagging uzyskał na teście 0,4976.
+Bagging miesza okresy wewnątrz development, dlatego słabiej odpowiada temu zastosowaniu.
+Nie zmieniamy protokołu ani progu na podstawie najwyższego wyniku obejrzanego testu.
+
+## Konsekwencje
+
+Na teście baseline ma precision **0,3955** i recall **0,7630**:
+3330 false positives oraz 677 false negatives. Próg maksymalizujący F1 nie uwzględnia
+kosztu zbędnych kontaktów ani utraconych szans; tych kosztów nie oszacowaliśmy.
+
+Udział pozytywów rośnie z **6,73%** w development do **31,58%** w teście,
+a wyniki kolejnych okien są zmienne. Test był wcześniej oglądany w eksploracjach;
+wyniki traktujemy jako benchmark, nie niezależny audyt generalizacji.
+Ograniczenia i kontrakt wejścia opisuje [Model Card](../model_card.md).
+
+Wybór modelu jest zatwierdzony. Do wdrożenia pozostają publikacja pakietu z aliasem
+`production` i zapis konkretnej wersji w #20 oraz niezależny smoke pobranego artefaktu
+w #21. Wersję i link do artefaktu dopiszemy w Model Card po publikacji.
 
 ## Historia
 
 | Data | Zmiana |
 | --- | --- |
-| 2026-11-24 | Lokalny benchmark i propozycja do wspólnego review; bez zatwierdzenia production |
+| 2026-11-24 | Propozycja wyboru po lokalnym porównaniu modeli |
+| 2026-11-26 | Wspólna akceptacja baseline’u i potwierdzenie pomiarów pakietów przez loader #20 |

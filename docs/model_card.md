@@ -1,8 +1,8 @@
 # Model Card — Bank Marketing
 
-Stan: **kandydat do pakowania, niezatwierdzony `production`** (24.11.2026).
-Opis dotyczy konkretnego modelu wskazanego poniżej; po wspólnej decyzji z Antonem
-trzeba dopisać wersję paczki i link do artefaktu modelu. [ADR-2](adr/0002-wybor-modelu.md) jest propozycją.
+Stan: **model wybrany wspólnie; publikacja `production` w toku** (26.11.2026).
+Wybór opisuje zaakceptowany [ADR-2](adr/0002-wybor-modelu.md). Do uzupełnienia
+po publikacji pozostają konkretna wersja paczki i link do artefaktu modelu.
 
 ## Model i pochodzenie
 
@@ -17,8 +17,8 @@ trzeba dopisać wersję paczki i link do artefaktu modelu. [ADR-2](adr/0002-wybo
 - SHA zapisany przez trening: `c66e7f81e3e8bb1aa3630e165b7f24c768250508`,
   `git_dirty=true`; sam SHA nie odtwarza całego ówczesnego kodu.
 - Wersje treningu: Python 3.11.17, scikit-learn 1.7.2, numpy 2.2.6, pandas 2.3.3.
-  Model jest lokalnym pickle z eksperymentów; paczka #20 i jej wersja pozostają
-  do przygotowania. Pełne pochodzenie i digest modelu: [raport JSON](notes/results/sprint-3-native-benchmark.json).
+  Model wyeksportowano do lokalnego pakietu #20 z preprocessingiem i metadanymi;
+  wersja W&B pozostaje do zapisania po publikacji. Pełne pochodzenie i digest modelu: [raport JSON](notes/results/sprint-3-native-benchmark.json).
 - [Run W&B tego modelu](https://wandb.ai/wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/runs/b4d90586db1e9551327d):
   metryki i raporty zweryfikowane przez API. To raport eksperymentu, nie artefakt `production`.
   Dostęp jest [tymczasowy](notes/sprint-3-wandb.md); wyniki zachowujemy także w repo.
@@ -45,8 +45,8 @@ Udział `yes`: 2433/36 168 = 6,73% w development, 2856/9043 = 31,58% w teście.
 Cechy liczbowe: `age`, `balance`, `day`, `campaign`, `pdays`, `previous`.
 Kategoryczne: `job`, `marital`, `education`, `default`, `housing`, `loan`, `contact`,
 `month`, `poutcome`. `duration` jest wykluczone, bo staje się znane po rozmowie.
-Wspólna normalizacja traktuje `unknown` i `pdays=-1` jako braki. Normalizację wejścia
-wykonuje się przed modelem; preprocessing wymagający `fit` jest zapisany w Pipeline.
+Wspólna normalizacja przycina białe znaki, zamienia puste napisy oraz `pdays=-1`
+na braki. `unknown` pozostaje kategorią. Normalizację wejścia wykonuje się przed modelem; preprocessing wymagający `fit` jest zapisany w Pipeline.
 
 ## Ocena
 
@@ -63,7 +63,12 @@ z runu holdout `20261123T232543-holdout-6bf251c7`. Średnie F1 okien baseline:
 0,1707 (poszczególne: 0,1367 / 0,0977 / 0,2778). Progi i konfiguracje wybrano przed
 końcowym testem, ale test był już oglądany w eksploracjach — to benchmark, nie nowy audyt.
 Koszty wczytywania, predykcji, natywnego rozmiaru i RSS: [raport porównania](notes/sprint-3-model-comparison.md).
-Pomiary paczki produkcyjnej pozostają do wykonania po #20.
+[Pomiar lokalnego pakietu](notes/results/sprint-3-package-benchmark.md) przez loader
+#20: 6406 B, mediana batcha 9043 rekordów 23,72 ms, pojedynczej predykcji 2,83 ms,
+RSS po rozgrzewce 185,8 MiB. Predykcja obejmuje normalizację wejścia i próg.
+Pomiary wykonano na poprawionej wersji #20 (`7bfd06f`), po testach integracji,
+zgodnie z metodą opisaną w raporcie porównania. To nie jest potwierdzenie
+pobrania artefaktu `production` z W&B.
 
 ## Ograniczenia
 

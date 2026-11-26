@@ -1,11 +1,12 @@
 # Sprint 3 — porównanie modeli (#19)
 
-Owner: Arrow; review: Anton. Stan na 24.11.2026: lokalne porównanie gotowe,
-wybór `production` wymaga wspólnego zatwierdzenia i pomiarów paczki z #20.
+Owner: Arrow; review: Anton. Stan na 26.11.2026: wybór chronologicznego baseline’u
+zatwierdzony przez obie osoby. Zmierzono też pakiety przez loader #20; publikacja
+`production` i zapis konkretnej wersji pozostają do wykonania.
 
 ## Wynik i rekomendacja
 
-Proponujemy przekazać do pakowania `baseline` z runu
+Wybraliśmy `baseline` z runu
 `20261123T232543-chronological-3d2c20c4`. To regresja logistyczna z preprocessingiem,
 refitowana na pierwszych 80% danych. Została wybrana przed testem według średniego
 F1 trzech okien chronologicznych: **0,1707** wobec **0,1688** dla `gbm_small`.
@@ -15,7 +16,7 @@ Na końcowych 9043 rekordach baseline ma **F1 0,5210**, precision **0,3955** i r
 **0,7630**. Jego natywny plik zajmuje **4,56 KiB**. Holdout `gbm_small` ma wyższe
 testowe F1 (**0,5390**), lecz nie wygrał własnej selekcji validation. Nie wybieramy
 protokołu ani nowego progu na podstawie najwyższego wyniku obejrzanego testu.
-Rekomendację i jej warunki opisuje [ADR-2](../adr/0002-wybor-modelu.md).
+Decyzję i jej ograniczenia opisuje [ADR-2](../adr/0002-wybor-modelu.md).
 
 [Pełne tabele](results/sprint-3-native-benchmark.md) obejmują baseline i cztery
 konfiguracje AutoGluona w każdym z trzech protokołów, a w holdout także DummyClassifier
@@ -62,7 +63,56 @@ rekordu **1,68 ms**, a RSS po rozgrzewce **193,8 MiB**. Chronologiczny GBM small
 osiągnął odpowiednio **9,45 ms**, **3,78 ms** i **220,5 MiB**: jest szybszy dla
 dużego batcha, wolniejszy dla pojedynczego rekordu. Koszt zależy więc od sposobu użycia.
 
-## Odtworzenie
+## Pomiary pakietów przez loader #20
+
+[Raport pakietów](results/sprint-3-package-benchmark.md) i jego
+[JSON](results/sprint-3-package-benchmark.json) obejmują wszystkie pięć modeli
+chronologicznego runu. Pakiety pochodzą z zapisanych artefaktów — bez ponownego
+treningu. Każdy pomiar używa nowego procesu, 2 rozgrzewek i 5 powtórzeń.
+
+| Model | Pakiet | Batch 9043 [ms] | 1 rekord [ms] | RSS warm [MiB] |
+| --- | ---: | ---: | ---: | ---: |
+| baseline | 6 406 B | 23,72 | 2,83 | 185,8 |
+| GBM small | 142 284 B | 17,33 | 4,82 | 213,4 |
+| GBM large | 252 854 B | 17,68 | 4,82 | 212,9 |
+| CatBoost | 96 350 B | 20,39 | 6,32 | 237,0 |
+| tree ensemble | 122 609 830 B | 92,66 | 68,17 | 401,0 |
+
+Rozmiar obejmuje katalog `model/` i `metadata.json`. Predykcja jest wywołaniem
+`predict_model_package`: obejmuje normalizację surowych cech, preprocessing,
+prawdopodobieństwa i zapisany próg. Loader to `load_model_package`.
+Nie mierzymy HTTP. Koszt natywnej predykcji z wcześniejszej tabeli ma inny zakres;
+wartości RSS pochodzą z osobnych przebiegów i nie wyznaczają kosztu samego wrappera.
+
+Przed startem workerów sprawdzamy metadane względem źródła: run, kandydat, cechy,
+próg, SHA/dirty, fingerprint, wersje i metryki testowe. Po pomiarze porównujemy
+prawdopodobieństwa pakietu z natywnym modelem na wszystkich 9043 rekordach
+(`rtol=atol=1e-12`). Ten odczyt referencji odbywa się po pomiarach czasu i RSS.
+Wszystkie pięć pakietów odtworzyło wyniki; F1 baseline nadal wynosi 0,5210.
+Digest pakietu i natywnej referencji musi pozostać niezmieniony.
+
+Pomiar wykonano z czystego commita benchmarku `52a0956`, zawierającego poprawiony
+loader #20 (`7bfd06f`). JSON zapisuje `git_dirty=false` oraz hashe obu modułów.
+Nie jest to pomiar opublikowanego artefaktu `production`. Poprawki spójności eksportu
+i ponawiania operacji z #20 przeszły niezależne testy reprodukcyjne.
+
+Pakiety tworzy Kedro; wcześniejsze runy
+można obsłużyć komendą `scripts/manage_model_package.py export` z #20.
+Układ wejścia to `ROOT/<run_id>/<candidate>/`, z kompletem kandydatów danego runu:
+
+```bash
+python -m asi_project.benchmark \
+  --run data/08_reporting/experiments/20261123T232543-chronological-3d2c20c4 \
+  --packages-root data/06_models/packages \
+  --output /tmp/s3-package-benchmark.json
+python -m asi_project.benchmark --render /tmp/s3-package-benchmark.json \
+  --output /tmp/s3-package-benchmark.md
+```
+
+Benchmark nie pakuje modeli i nie publikuje ich w W&B. Brak pakietu, niezgodne
+metadane lub inne prawdopodobieństwa przerywają pomiar bez zapisania raportu końcowego.
+
+## Odtworzenie pomiarów natywnych
 
 ```bash
 conda activate asi-ml
@@ -135,21 +185,31 @@ pomiaru, przed publikacją. Zachowujemy ten raport bez zmian; powiązania powyż
 uzupełniają jego pochodzenie. W&B zawiera raporty typu `experiment-report`;
 wersja paczki modelu i alias `production` pozostają częścią #20.
 
+## Pełny przebieg online
+
+Z commita `52a0956` wykonano nowy trening chronologiczny z W&B online: baseline
+i cztery AutoGluony, ewaluacja, pakowanie oraz publikacja wyników. API potwierdziło
+metryki i raporty pięciu runów. Pięć pakietów testowych opublikowano i pobrano;
+niezależny proces odtworzył predykcje bez dostępu do lokalnych źródeł.
+[Dowód, linki i ograniczenia](sprint-3-online-integration.md) opisują również brak
+opcjonalnej kalibracji wymagającej PyTorcha. Alias `production` pozostał bez zmian.
+To dodatkowa weryfikacja integracji, bez zmiany wcześniej wybranego modelu i progu.
+
 ## Sprawdzenia
 
-Po połączeniu ze zmianami W&B z #18 przeszło **412 testów**, w tym **32 dla benchmarku**,
-oraz pre-commit dla
-zmienionych plików i kontrola diffu. Wszystkie 16 świeżych procesów odtworzyło zapisane
-metryki testu. Końcowe pomiary czasów wykonano po testach, bez równoległego uruchamiania
-pytest. CI na Windows/macOS nie zostało jeszcze uruchomione dla tej gałęzi.
+Po połączeniu `main` z #20 przeszło **514 testów**, w tym **45 benchmarku**
+i rzeczywisty test AutoGluona; bez pominiętych testów. 10 testów pakietów obejmuje
+realny zapis/odczyt, osobne procesy, niespójne metadane,
+etykiety i podmienione prawdopodobieństwa. Trzy dodatkowe testy sprawdzają awarię
+zapisu obu ścieżek CLI, udane ponowienie i zachowanie istniejącego wyniku.
+Pre-commit i kontrola diffu przeszły. Wszystkie pięć workerów odtworzyło metryki
+oraz prawdopodobieństwa testu; pomiar wykonano po testach, bez równoległego pytest.
+CI na Windows/macOS nie zostało jeszcze uruchomione dla tej gałęzi.
 
 ## Do zamknięcia #19
 
-- Anton: wspólny loader i format paczki z #20, następnie niezależne review porównania.
-  Powtórzyć koszty na rzeczywistych paczkach baseline i co najmniej dwóch AutoGluonów,
-  sprawdzając identyczność predykcji i zachowanie progu. Obecny adapter natywny pozostaje
-  narzędziem eksperymentów, nie zastępuje implementacji #20.
-- Arrow i Anton: zatwierdzić albo zmienić rekomendację w ADR-2; dopiero wtedy oznaczyć
-  Model Card jako finalną i przekazać identyfikator modelu do `production`.
-- Po #20: dopisać konkretną wersję artefaktu modelu i alias `production`.
-  Linki do runów eksperymentów są już dostępne powyżej.
+- Review porównania przez Antona. #25 jest już połączony z `main`; integracja
+  z poprawionym #20 i pomiary pięciu pakietów są potwierdzone powyżej.
+- Wybór baseline’u został zatwierdzony przez obie osoby; nie czekamy na ponowną decyzję.
+- Po publikacji z #20 dopisać konkretną wersję artefaktu i link `production`
+  w ADR-2 oraz Model Card. Niezależny smoke pobranego modelu należy do #21.

@@ -6,7 +6,7 @@ i jego konsekwencje. W projekcie powstają dokładnie trzy ADR-y.
 | ADR | Sprint | Temat |
 |---|---|---|
 | ADR-1 | S2 | Gdzie żyje przetwarzanie: input normalization, training-only filtering, model preprocessing |
-| [ADR-2](0002-wybor-modelu.md) (propozycja) | S3 | Wybór modelu produkcyjnego i jego postać jako artefaktu |
+| [ADR-2](0002-wybor-modelu.md) | S3 | Wybór modelu produkcyjnego i jego postać jako artefaktu |
 | ADR-3 | S4 → S5 → S6 | Jak model trafia do usługi; stan i konfiguracja systemu; sekrety, cloud persistence i deployment |
 
 ADR-3 powstaje stopniowo: szkic w Sprincie 4 (jak model trafia do usługi i obrazu),
