@@ -1,0 +1,34 @@
+{
+  "checkout": {
+    "git_sha": "e9b3084e79030026d08b7a8fa306d701bed5a150",
+    "git_dirty": false
+  },
+  "environment_prefix": "/tmp/asi-pr28-fresh-env",
+  "python": "3.11.18",
+  "versions": {
+    "numpy": "2.2.6",
+    "pandas": "2.3.3",
+    "scikit-learn": "1.7.2",
+    "kedro": "1.7.0",
+    "wandb": "0.30.0",
+    "autogluon.tabular": "1.6.3"
+  },
+  "environment_created_from": "environment.yml",
+  "pip_requirements": [
+    "requirements/preflight-s2.txt",
+    "requirements/preflight-s3.txt",
+    "requirements/benchmark-s3.txt"
+  ],
+  "constraints": "constraints.txt",
+  "pip_check": "passed",
+  "online_smoke_report": "sprint-3-smoke-fresh-env.json",
+  "tests": {
+    "passed": 530,
+    "skipped": 0,
+    "autogluon_package": true
+  },
+  "pre_commit": "passed",
+  "kedro_ci": "passed",
+  "check_env_autogluon": "passed",
+  "scope": "Linux; nowe środowisko conda, istniejące uwierzytelnienie W&B i cache pobierania; bez kopiowania bibliotek z asi-ml."
+}

@@ -204,12 +204,12 @@ etykiety i podmienione prawdopodobieństwa. Trzy dodatkowe testy sprawdzają awa
 zapisu obu ścieżek CLI, udane ponowienie i zachowanie istniejącego wyniku.
 Pre-commit i kontrola diffu przeszły. Wszystkie pięć workerów odtworzyło metryki
 oraz prawdopodobieństwa testu; pomiar wykonano po testach, bez równoległego pytest.
-CI na Windows/macOS nie zostało jeszcze uruchomione dla tej gałęzi.
+CI PR #27 przeszło na Linuxie, Windowsie i macOS.
 
-## Do zamknięcia #19
+## Zakończenie #19
 
-- Review porównania przez Antona. #25 jest już połączony z `main`; integracja
-  z poprawionym #20 i pomiary pięciu pakietów są potwierdzone powyżej.
-- Wybór baseline’u został zatwierdzony przez obie osoby; nie czekamy na ponowną decyzję.
-- Publikacja `bank-marketing-model:v0` z aliasem `production`, pobranie i pięć predykcji są potwierdzone.
-  Pełny adres jest w Model Card; niezależny odbiór CI należy do #21.
+Anton zatwierdził porównanie w [PR #27](https://github.com/arrow501/ASI-s29379-s30253/pull/27),
+który został scalony do `main`. Wybór baseline’u zatwierdziły obie osoby.
+Pakiet `bank-marketing-model:v0` jest opublikowany z aliasem `production`.
+Po merge #28 potwierdzono pobranie i pięć predykcji w niezależnym jobie online:
+[odbiór S3](sprint-3-closeout.md).

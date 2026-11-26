@@ -74,7 +74,9 @@ Ograniczenia i kontrakt wejścia opisuje [Model Card](../model_card.md).
 Wybrany pakiet opublikowano jako `bank-marketing-model:v0` z aliasem `production`.
 Pobranie po aliasie, digest i pięć predykcji zostały sprawdzone. Pełny identyfikator
 jest w [Model Card](../model_card.md) i [potwierdzeniu](../notes/results/sprint-3-production.json).
-Pozostaje niezależny odbiór CI w #21.
+Po merge #28 niezależny smoke online w GitHub Actions pobrał `production:v0`
+i wykonał pięć predykcji bez treningu. Instalacja w nowym środowisku conda również
+przeszła. Dowody: [odbiór S3](../notes/sprint-3-closeout.md).
 
 ## Historia
 
