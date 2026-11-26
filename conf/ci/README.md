@@ -14,4 +14,8 @@ Nazwa wejścia `raw_data` pozostaje taka sama. Dzięki temu `data_processing` wy
 
 ## Konfiguracja kolejnych etapów
 
-S2-3 dodaje osobne ścieżki dla modelu i metryk z próbki CI. Od Sprintu 3 konfiguracja CI wyłączy wysyłanie danych do W&B przez `WANDB_MODE=disabled` i pozwoli wyłączyć AutoGluon lub ograniczyć czas jego działania.
+Catalog ma osobne ścieżki dla modelu, metryk, raportów eksperymentów i pakietów z próbki CI.
+`parameters_experiments.yml` wyłącza AutoGluona; zwykły workflow CI ustawia
+`WANDB_MODE=disabled`. Po `experiments_test` uruchamia lokalny smoke pakietu baseline’u.
+Osobny workflow `Production model smoke` pobiera model z W&B online:
+[komendy i odbiór](../../docs/notes/sprint-3-smoke-test.md).

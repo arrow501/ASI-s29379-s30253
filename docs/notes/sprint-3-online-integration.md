@@ -59,5 +59,6 @@ Próg F1 był dobierany osobno przez kod eksperymentów, zgodnie z konfiguracją
 Nie traktujemy pominiętej kalibracji jako wykonanej ani jako awarii W&B.
 
 Próba używała tego samego środowiska conda, w którym wykonano trening.
-Nie zastępuje odbioru #21 na pakiecie `production` w niezależnym środowisku.
+Odbiór #21 wykonano później na pakiecie `production` w nowym środowisku i w Actions:
+[wyniki końcowe S3](sprint-3-closeout.md).
 Dostęp jest [tymczasowy](sprint-3-wandb.md); możliwe są opóźnienia i błędy usługi.

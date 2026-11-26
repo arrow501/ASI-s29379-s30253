@@ -24,6 +24,9 @@ logiki (np. `normalize_input` działa identycznie w notebooku, w pipeline Kedro 
 | `provenance.py`, `experiment_store.py` | S3 | fingerprint/SHA oraz lokalizacja wyników z catalogu |
 | `pipeline_registry.py`, `settings.py` | S2 | pliki projektu Kedro (rejestracja pipeline'ów, ustawienia) |
 | `model_package.py` | S3 | model i `metadata.json` (cechy, target, klasa pozytywna, próg, metryki, SHA, fingerprint, wersje); wspólny zapis/odczyt dla Kedro, smoke modelu i API |
+| `tracking.py` | S3 | logowanie gotowych wyników do W&B lub zapis offline; `disabled` pomija SDK |
+| `model_artifacts.py` | S3 | publikacja i pobranie W&B Artifact, zapis konkretnej wersji |
+| `benchmark.py` | S3 | pomiary natywnych modeli lub pakietów w osobnych procesach |
 | `api/` | S4 | usługa predykcji — patrz `api/README.md` |
 
 Zasada: moduły aktywne w Sprincie 1 nie importują Kedro, W&B, AutoGluona, FastAPI ani innych
@@ -293,7 +296,8 @@ python scripts/predict_model_package.py --package "data/06_models/ci/packages/<r
 
 Dla pełnego CSV dodaj `--sep ";"`. Opcjonalne `--output <plik.json>` zapisuje wynik
 zamiast wypisywać go w terminalu. Ten lokalny przykład nie pobiera artefaktu online;
-niezależny smoke test `production` należy do S3-4.
+niezależny smoke test `production` wykonano osobno w S3-4:
+[wyniki odbioru](../../docs/notes/sprint-3-closeout.md).
 
 ### Użycie w pomiarach S3-2
 
