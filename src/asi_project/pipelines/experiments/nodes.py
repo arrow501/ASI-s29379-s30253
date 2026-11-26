@@ -1,6 +1,7 @@
 """Trening z wydzieloną walidacją i eksport zamrożonych kandydatów do przenośnych pakietów."""
 
 import logging
+import tempfile
 import time
 from pathlib import Path
 
@@ -124,25 +125,36 @@ def package_experiment_models(selection, raw_data, store, tested=None):
     if tested is not None and read_json(root / "test_metrics.json") != tested:
         raise ValueError("Packaging requires the unchanged test report.")
 
+    metadata = {
+        name: build_model_metadata(root, name, raw_data, include_test=tested is not None)
+        for name in sorted(selection["candidates"])
+    }
+    run_ids = {item["source_run_id"] for item in metadata.values()}
+    if len(run_ids) != 1:
+        raise ValueError("Packaging requires candidates from one source run.")
+
+    store = Path(store).resolve()
+    package_dir = store / run_ids.pop()
+    if package_dir.exists():
+        raise FileExistsError(package_dir)
+    store.mkdir(parents=True, exist_ok=True)
     packages = {}
 
-    for name, candidate in sorted(selection["candidates"].items()):
-        metadata = build_model_metadata(
-            root,
-            name,
-            raw_data,
-            include_test=tested is not None,
-        )
+    with tempfile.TemporaryDirectory(prefix=".model-packages-", dir=store) as temporary:
+        staging = Path(temporary) / "packages"
+        staging.mkdir()
+        for name, item in metadata.items():
+            candidate = selection["candidates"][name]
+            model = load_native_model(candidate["model_path"], candidate["model_kind"])
+            save_model_package(model, item, staging / name)
+            packages[name] = str(package_dir / name)
 
-        model = load_native_model(
-            candidate["model_path"],
-            candidate["model_kind"],
-        )
-
-        package_dir = Path(store) / metadata["source_run_id"] / name
-
-        packages[name] = str(save_model_package(model, metadata, package_dir))
-
-    write_json(root / "packages.json", packages)
+        # Udostępnij cały zestaw dopiero po poprawnym zapisaniu wszystkich kandydatów.
+        staging.rename(package_dir)
+        try:
+            write_json(root / "packages.json", packages)
+        except OSError:
+            package_dir.rename(staging)
+            raise
 
     return selection, packages

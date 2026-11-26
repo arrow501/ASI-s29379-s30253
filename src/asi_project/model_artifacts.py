@@ -130,9 +130,14 @@ def download_model_package(artifact_ref, package_dir, tracking):
 
         staging.rename(package_dir)
 
-    write_json(
-        package_dir.parent / f"{package_dir.name}.wandb.json",
-        receipt,
-    )
+        try:
+            write_json(
+                package_dir.parent / f"{package_dir.name}.wandb.json",
+                receipt,
+            )
+        except OSError:
+            # Cofnij przeniesienie, aby awaria zapisu nie blokowała ponownego pobrania.
+            package_dir.rename(staging)
+            raise
 
     return package_dir, receipt

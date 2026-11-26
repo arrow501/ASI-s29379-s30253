@@ -13,6 +13,7 @@ import pytest
 from asi_project.config_validation import project_parameters
 from asi_project.data import normalize_input
 from asi_project.model_package import load_model_package, predict_model_package
+from asi_project.pipelines.experiments.artifacts import read_json, write_json
 from asi_project.pipelines.experiments.evaluation import evaluate_test, freeze_selection
 from asi_project.pipelines.experiments.nodes import train_holdout_models
 from asi_project.pipelines.experiments.splits import split_experiment_data
@@ -104,6 +105,44 @@ runpy.run_path(script, run_name="__main__")
     assert metadata["candidate_name"] == "baseline"
     assert ("test" in metadata["metrics"]) is include_test
     assert len(predict_model_package(model, metadata, raw.iloc[:5])) == 5
+
+
+@pytest.mark.parametrize("include_test", [False, True])
+def test_export_rejects_a_different_model_before_loading(
+    export_source, tmp_path, repo_root, monkeypatch, include_test
+):
+    run_dir, raw = export_source
+    selection = read_json(run_dir / "selection.json")
+    selection["candidates"]["baseline"]["model_path"] = selection["candidates"]["dummy"][
+        "model_path"
+    ]
+    write_json(run_dir / "selection.json", selection)
+    source = tmp_path / "raw.csv"
+    raw.to_csv(source, index=False)
+    output = tmp_path / "exported"
+    command = load_command(repo_root)
+
+    def refuse_load(*args, **kwargs):
+        pytest.fail("An inconsistent selection reached native model loading")
+
+    monkeypatch.setattr(command, "load_native_model", refuse_load)
+    arguments = [
+        "export",
+        "--run",
+        str(run_dir),
+        "--candidate",
+        "baseline",
+        "--data",
+        str(source),
+        "--output",
+        str(output),
+    ]
+    if include_test:
+        arguments.append("--include-test")
+
+    with pytest.raises(ValueError, match="Candidate model_path differs from the frozen selection"):
+        command.main(arguments)
+    assert not output.exists()
 
 
 @pytest.mark.parametrize("production", [False, True])

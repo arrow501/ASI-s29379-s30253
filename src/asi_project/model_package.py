@@ -330,6 +330,9 @@ def build_model_metadata(
     result = report["results"][candidate_name]
     frozen = selection["candidates"][candidate_name]
 
+    if Path(result["model_path"]).resolve() != Path(frozen["model_path"]).resolve():
+        raise ValueError("Candidate model_path differs from the frozen selection.")
+
     for key in ("model_kind", "decision_threshold", "threshold_source"):
         if result[key] != frozen[key]:
             raise ValueError(f"Candidate {key} differs from the frozen selection.")

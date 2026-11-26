@@ -64,8 +64,9 @@ data/06_models/baseline_package/
 └── metadata.json
 ```
 
-Dla sklearn zapisujemy cały Pipeline, obejmujący preprocessing
-i klasyfikator.
+Dla baseline’u sklearn zapisujemy cały Pipeline, obejmujący preprocessing
+i klasyfikator. Referencyjny DummyClassifier zapisujemy samodzielnie —
+nie wymaga preprocessingu cech.
 
 Dla AutoGluona katalog `model/` zawiera kompletny zapis
 TabularPredictor, wraz z preprocessingiem i wymaganymi modelami

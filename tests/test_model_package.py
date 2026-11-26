@@ -304,6 +304,33 @@ def test_metadata_builder_rejects_changed_frozen_thresholds(experiment_run, sour
         )
 
 
+@pytest.mark.parametrize("source", ["metrics", "selection"])
+@pytest.mark.parametrize("include_test", [False, True])
+def test_metadata_builder_rejects_a_different_model_path(experiment_run, source, include_test):
+    root, raw, _, _ = experiment_run
+    selection = read_json(root / "selection.json")
+    different_model = selection["candidates"]["dummy"]["model_path"]
+    assert Path(different_model).is_file()
+    report = read_json(root / f"{source}.json")
+    candidates = report["results"] if source == "metrics" else report["candidates"]
+    candidates["baseline"]["model_path"] = different_model
+    write_json(root / f"{source}.json", report)
+
+    with pytest.raises(ValueError, match="Candidate model_path differs from the frozen selection"):
+        model_package.build_model_metadata(root, "baseline", raw, include_test=include_test)
+
+
+def test_metadata_builder_accepts_equivalent_model_paths(experiment_run, monkeypatch):
+    root, raw, _, _ = experiment_run
+    report = read_json(root / "metrics.json")
+    original = model_package.build_model_metadata(root, "baseline", raw)
+    monkeypatch.chdir(root)
+    report["results"]["baseline"]["model_path"] = "baseline.pkl"
+    write_json(root / "metrics.json", report)
+
+    assert model_package.build_model_metadata(root, "baseline", raw) == original
+
+
 def test_metadata_builder_can_skip_absent_test_results(experiment_run):
     root, raw, _, _ = experiment_run
     (root / "test_metrics.json").unlink()
