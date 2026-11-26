@@ -10,7 +10,14 @@ from kedro.io import DataCatalog, MemoryDataset
 from kedro.runner import SequentialRunner
 
 from asi_project.config_validation import project_parameters
+from asi_project.data import normalize_input
+from asi_project.model_package import (
+    load_model_package,
+    load_native_model,
+    predict_model_package,
+)
 from asi_project.pipeline_registry import register_pipelines
+from asi_project.pipelines.experiments.scoring import positive_probabilities
 
 
 @pytest.mark.parametrize("name", ["experiments", "experiments_bagged", "experiments_crossfold"])
@@ -24,10 +31,14 @@ def test_real_kedro_graph_persists_decision_and_optional_test_without_sdks(
     raw["y"] = np.where(np.arange(100) % 2, "yes", "no")
     catalog = DataCatalog.from_config(
         {
+            "model_package_store": {
+                "type": "asi_project.experiment_store.ExperimentStore",
+                "filepath": str(tmp_path / "packages"),
+            },
             "experiment_store": {
                 "type": "asi_project.experiment_store.ExperimentStore",
-                "filepath": str(tmp_path),
-            }
+                "filepath": str(tmp_path / "reports"),
+            },
         }
     )
     for key, value in {
@@ -48,7 +59,7 @@ def test_real_kedro_graph_persists_decision_and_optional_test_without_sdks(
         catalog[key] = MemoryDataset(data=value)
     pipeline = register_pipelines()[name + ("_test" if include_test else "")]
     outputs = SequentialRunner().run(pipeline, catalog)
-    root = next(tmp_path.iterdir())
+    root = next((tmp_path / "reports").iterdir())
     report = json.loads((root / "metrics.json").read_text())
     selection = json.loads((root / "selection.json").read_text())
     assert report["status"] == "completed" and report["test_evaluated"] is include_test
@@ -59,6 +70,32 @@ def test_real_kedro_graph_persists_decision_and_optional_test_without_sdks(
     assert all(
         Path(candidate["model_path"]).exists() for candidate in selection["candidates"].values()
     )
+    packages = outputs["experiment_packages"].load()
+    assert set(packages) == expected
+    assert json.loads((root / "packages.json").read_text()) == packages
+    parameters = project_parameters(project.config, project.contract)
+    features = parameters["numeric_features"] + parameters["categorical_features"]
+    prediction_input = normalize_input(raw).loc[:, features].iloc[-5:]
+    for candidate, package_dir in packages.items():
+        model, metadata = load_model_package(package_dir)
+        frozen = selection["candidates"][candidate]
+        native = load_native_model(frozen["model_path"], frozen["model_kind"])
+        predictions = predict_model_package(model, metadata, raw.iloc[-5:])
+        probability = positive_probabilities(native, prediction_input)
+        np.testing.assert_allclose(predictions["probability_positive"], probability)
+        assert predictions["prediction"].tolist() == [
+            metadata["positive_class"]
+            if value >= frozen["decision_threshold"]
+            else metadata["negative_class"]
+            for value in probability
+        ]
+        assert predictions.index.equals(raw.iloc[-5:].index)
+        assert metadata["candidate_name"] == candidate
+        assert metadata["source_run_id"] == root.name
+        assert metadata["decision_threshold"] == frozen["decision_threshold"]
+        assert metadata["metrics"]["validation"] == report["results"][candidate]["validation"]
+        assert ("test" in metadata["metrics"]) is include_test
+        assert Path(package_dir).is_relative_to(tmp_path / "packages")
     if include_test:
         tested = json.loads((root / "test_metrics.json").read_text())
         assert tested["status"] == "completed" and tested["n_test"] == 20
