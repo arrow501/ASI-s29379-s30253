@@ -58,7 +58,9 @@ def validation_threshold(y, probability):
         out=np.zeros_like(denominator),
         where=denominator != 0,
     )
-    return float(thresholds[np.flatnonzero(scores == scores.max())[-1]])
+    # Błędy zaokrągleń nie powinny zmieniać reguły wyboru wyższego progu przy remisie.
+    best_scores = np.isclose(scores, scores.max(), rtol=0, atol=1e-12)
+    return float(thresholds[np.flatnonzero(best_scores)[-1]])
 
 
 def validation_result(model, X, y, threshold_mode="fixed"):
