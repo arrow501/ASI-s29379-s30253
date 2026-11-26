@@ -6,7 +6,7 @@ from asi_project.tracking import track_experiment
 
 from .cross_validation import train_cross_validated_models
 from .evaluation import evaluate_test, freeze_selection
-from .nodes import train_holdout_models
+from .nodes import package_experiment_models, train_holdout_models
 from .splits import prepare_bagged_folds, prepare_chronological_folds, split_experiment_data
 
 
@@ -98,7 +98,27 @@ def create_pipeline(protocol="holdout", include_test=False):
                 )
             ]
         )
-    tracking_inputs = {"selection": "experiment_selection", "tracking": "params:tracking"}
+    package_inputs = {
+        "selection": "experiment_selection",
+        "raw_data": "raw_data",
+        "store": "model_package_store",
+    }
+    if include_test:
+        package_inputs["tested"] = "experiment_test_report"
+    pipeline += Pipeline(
+        [
+            node(
+                package_experiment_models,
+                package_inputs,
+                ["packaged_experiment_selection", "experiment_packages"],
+                name="package_experiment_models",
+            )
+        ]
+    )
+    tracking_inputs = {
+        "selection": "packaged_experiment_selection",
+        "tracking": "params:tracking",
+    }
     if include_test:
         tracking_inputs["tested"] = "experiment_test_report"
     pipeline += Pipeline(

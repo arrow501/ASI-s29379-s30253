@@ -18,3 +18,7 @@ metrics:
   filepath: data/08_reporting/metrics.json
   save_args:
     indent: 2
+
+model_package_store:
+  type: asi_project.experiment_store.ExperimentStore
+  filepath: data/06_models/packages
