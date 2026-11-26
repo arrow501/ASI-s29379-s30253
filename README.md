@@ -5,11 +5,9 @@ rozwijacie jeden wspólny projekt: od danych i poprawnego eksperymentu, przez re
 pipeline i wybór modelu, aż po API, persistence, interfejs użytkownika, konteneryzację
 i wdrożenie w Google Cloud.
 
-Od pierwszego dnia widzicie docelową strukturę systemu na wszystkie sprinty (S1–S6), ale na
-starcie realizujecie wyłącznie **Sprint 1**. Elementy kolejnych sprintów są przygotowanym
-scaffoldem: pokazują, co będziecie później rozwijać i z jakimi częściami systemu będzie to
-powiązane, ale nie zawierają gotowych rozwiązań ani zadań do wykonania wcześniej
-(szczegóły: sekcja „Architektura i scaffold S1–S6”).
+Zaimplementowane są S1–S3: przygotowanie danych, pipeline Kedro, eksperymenty,
+pakowanie i pobranie wybranego modelu. API, persistence, UI i wdrożenie należą do S4–S6.
+[Podsumowanie S3 i model do S4](docs/notes/sprint-3-closeout.md).
 
 <!-- KARTA-PROJEKTU:START -->
 ## Karta projektu (wypełnia zespół w Sprincie 1)
@@ -56,25 +54,29 @@ Wszystkie projekty dotyczą binary classification. Dataset wybieracie z listy w
 [`docs/datasets.md`](docs/datasets.md) — tam są też ALLOWED i EXCLUDED FEATURES, moment
 predykcji i strategia splitu. Kilka zespołów może wybrać ten sam dataset.
 
-## Start Sprintu 1
+## Przygotowanie środowiska
 
-Wymagania: Miniforge (conda), Git, VS Code (wspierane oficjalnie) i środowisko `asi-ml`
-z onboardingu.
+Wymagania: Miniforge (conda), Git i Python 3.11 w środowisku `asi-ml`.
+VS Code jest wspieranym edytorem. Na macOS przed instalacją LightGBM wykonaj
+`brew install libomp`. W&B wymaga macOS 13 lub nowszego.
 
 ```bash
 git clone <adres repozytorium zespołu>
 cd <katalog repozytorium>
-conda env update -n asi-ml -f environment.yml --prune
+conda env create -f environment.yml
 conda activate asi-ml
 python -m pip install --no-deps -e .
+python -m pip install -r requirements/preflight-s2.txt -r requirements/preflight-s3.txt -r requirements/benchmark-s3.txt -c constraints.txt
 pre-commit install
 python scripts/check_env.py
 pytest
 ```
 
-Na czystym starcie `pytest` przechodzi, a testy projektu są pomijane z komunikatem, co zrobić.
-Dalej postępujcie według [`docs/sprints/SPRINT_1.md`](docs/sprints/SPRINT_1.md). Postęp
-względem Definition of Done pokazuje `python scripts/check_dod.py --sprint 1`.
+Jeśli środowisko `asi-ml` już istnieje, zamiast tworzenia użyj
+`conda env update -n asi-ml -f environment.yml --prune`, a następnie powtórz instalacje pip.
+Pełny test pakietu AutoGluona włączysz przez `pytest --run-autogluon-package`.
+Podstawowe CI nie instaluje AutoGluona ani W&B; sprawdza baseline i lokalny pakiet.
+Instrukcja niezależnego pobrania modelu: [smoke production](docs/notes/sprint-3-smoke-test.md).
 
 ### Workspace w VS Code
 
@@ -130,7 +132,7 @@ Najważniejsze pliki Sprintu 1:
 ## Kedro quickstart — Sprint 2
 
 Polecenia wykonuj z katalogu repozytorium, po utworzeniu środowiska `asi-ml`
-zgodnie z [instrukcją środowiska](#start-sprintu-1). Zainstaluj pakiet i zależności:
+zgodnie z [instrukcją środowiska](#przygotowanie-środowiska). Zainstaluj pakiet i zależności:
 
 ```bash
 conda activate asi-ml
@@ -188,8 +190,9 @@ W VS Code dostępne są zadania **ASI: set up visual exploration (optional)**
 i **ASI: visual exploration (marimo, asi-ml)**.
 
 Notebook 03 zawiera PCA z płynną rotacją, hover, zaznaczanie regionów, t-SNE,
-wykresy chronologiczne i boczny spis treści. Używa wcześniejszych 80% danych, bez
-treningu modelu. Bez `--sample` wybiera pełne dane, jeśli są lokalnie dostępne;
+wykresy chronologiczne i boczny spis treści. PCA i t-SNE używają pierwszych 80% danych;
+diagnostyka splitów pokazuje też końcowy test, oglądany już we wcześniejszych eksploracjach.
+Notebook nie trenuje modeli. Bez `--sample` wybiera pełne dane, jeśli są lokalnie dostępne;
 w przeciwnym razie próbkę CI. Serwer nasłuchuje tylko lokalnie.
 Notebooki 01 i 02 pozostają w swoim oryginalnym formacie.
 Instrukcje przejęcia przez marimo-pair i opis matematyki:
@@ -249,6 +252,7 @@ Zapis pakietu z gotowego eksperymentu, publikacja W&B Artifact, pobranie i predy
 Odbiór wybranego modelu: [smoke test `production` na świeżym checkoutcie](docs/notes/sprint-3-smoke-test.md).
 Zwykłe CI sprawdza pakiet lokalnie bez sekretów; osobny workflow **Production model smoke**
 pobiera zatwierdzoną wersję z W&B i zapisuje raport pięciu predykcji.
+Stan wymagań i dowody odbioru: [zamknięcie Sprintu 3](docs/notes/sprint-3-closeout.md).
 
 ## Definition of Done Sprintu 1
 
@@ -269,11 +273,8 @@ Docelowy system budujemy warstwami — każdy sprint aktywuje i rozwija kolejną
 
 dane → pipeline → eksperymenty i artefakt → API i stan → UI i compose → chmura
 
-Cały docelowy scaffold jest widoczny od początku, ale **aktywny jest tylko Sprint 1**.
-Katalogi przyszłych sprintów zawierają README oznaczone „Scaffold for Sprint N — do not
-implement before this sprint.”: opisują, co powstanie, w którym sprincie i z jakim kontraktem.
-To nie są rozwiązania ani zadania do wykonania wcześniej. Kod Sprintu 1 nie korzysta z żadnego
-z tych elementów.
+S1–S3 mają działający kod. Katalogi S4–S6 zawierają jeszcze scaffold i opisy planowanych
+kontraktów. Bazowe moduły S1 zachowują niezależność od Kedro, W&B i AutoGluona.
 
 | Element / katalog | Sprint | Rola |
 |---|---|---|
@@ -282,12 +283,12 @@ z tych elementów.
 | `src/asi_project/` (`config`, `data`, `model`, `metrics`, `download`) | S1 | kontrakt danych, trzy typy przetwarzania, baseline, metryki |
 | `notebooks/` | S1 | EDA i baseline |
 | `data/01_raw/` | S1 | pełne dane (poza gitem) i próbka CI |
-| `scripts/` | S1, rozszerzany w S3–S6 | dane, próbka CI, środowisko, DoD; później smoke modelu i smoke API |
-| `tests/` | S1, rozszerzany w S2 i S4 | testy kontraktów; później testy nodów (`tests/pipelines/`) i API (`tests/api/`) |
+| `scripts/` | S1, rozszerzany w S3–S6 | dane, środowisko, pakowanie i smoke modelu; smoke API od S4 |
+| `tests/` | S1–S4 | testy kontraktów, nodów, eksperymentów i pakietów; testy API od S4 |
 | `.github/workflows/ci.yml` | S1 → S6 | CI rośnie razem z systemem |
 | `conf/` (`base`, `local`, `ci`) | S2 | konfiguracja Kedro |
-| `src/asi_project/pipelines/` | S2 → S3 | pipeline'y `data_processing` i `data_science` |
-| `data/02_intermediate/`, `data/06_models/`, `data/08_reporting/` | S2 → S3 | wyjścia pipeline'u (poza gitem) |
+| `src/asi_project/pipelines/` | S2 → S3 | baseline S2 i trzy protokoły eksperymentów S3 |
+| `data/02_intermediate/`, `data/06_models/`, `data/08_reporting/` | S2 → S3 | opcjonalne dane pośrednie oraz zapisane modele i raporty (poza gitem) |
 | pakiet modelu (opis w `src/asi_project/README.md`) | S3 | katalog z modelem i `metadata.json` |
 | `docs/model_card.md` | S3 | Model Card |
 | `src/asi_project/api/` | S4 | usługa: kontrakt, ustawienia, persistence |

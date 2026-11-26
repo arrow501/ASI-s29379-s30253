@@ -73,7 +73,10 @@ Koszty wczytywania, predykcji, natywnego rozmiaru i RSS: [raport porównania](no
 RSS po rozgrzewce 185,8 MiB. Predykcja obejmuje normalizację wejścia i próg.
 Pomiary wykonano na poprawionej wersji #20 (`7bfd06f`), po testach integracji,
 zgodnie z metodą opisaną w raporcie porównania. Po publikacji dodatkowo pobrano `production` wskazujące na `v0`, sprawdzono digest pakietu
-i pięć predykcji bez targetu. Niezależny odbiór środowiska CI pozostaje w #21.
+i pięć predykcji bez targetu. Po merge #28 smoke online na `main` również przeszedł:
+[raport Actions](notes/results/sprint-3-smoke-main.json).
+Instalację od zera i predykcję potwierdzono także w nowym środowisku conda na Linuxie:
+[odbiór S3](notes/sprint-3-closeout.md).
 
 ## Ograniczenia
 

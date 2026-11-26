@@ -1,7 +1,8 @@
 # Architektura systemu
 
-Ten dokument opisuje architekturę systemu zespołu. W Sprincie 1 powstaje diagram v0, który
-będzie aktualizowany w kolejnych sprintach.
+Ten dokument opisuje architekturę systemu po S3. Diagram v0 zachowuje plan z S1;
+sekcje S2 i S3 przedstawiają zaimplementowane przepływy. API, persistence, UI i chmura
+należą do kolejnych sprintów.
 
 ## Architektura docelowa (scaffold)
 
@@ -143,9 +144,41 @@ Wyniki trafiają do `data/06_models/` i `data/08_reporting/`; CI używa podkatal
 Kontrakt połączenia i komendy odbioru są w
 [handoffie S2-2/S2-3](notes/sprint-2-handoff.md).
 
+## Eksperymenty i pakiet modelu: Sprint 3
+
+```mermaid
+flowchart LR
+    RAW[raw_data] --> DP[data_processing]
+    DP --> SPLIT[holdout albo foldy]
+    SPLIT --> TRAIN[baseline i cztery konfiguracje AutoGluona]
+    TRAIN --> FREEZE[selection.json: wybór i progi]
+    FREEZE --> TEST[opcjonalny test końcowych 20%]
+    FREEZE --> PACK[package_experiment_models]
+    TEST --> PACK
+    PACK --> LOCAL[model/ i metadata.json każdego kandydata]
+    PACK --> TRACK[track_experiment]
+    TRACK --> REPORT[W&B: experiment-report, jeśli włączony]
+    LOCAL --> PUBLISH[osobna publikacja zatwierdzonego pakietu]
+    PUBLISH --> PROD[W&B: bank-marketing-model:v0, production]
+    PROD --> DOWNLOAD[download_model_package]
+    DOWNLOAD --> LOAD[load_model_package]
+    LOAD --> PREDICT[predict_model_package bez treningu]
+```
+
+Konfiguracja i progi powstają na validation lub predykcjach foldów, przed testem.
+Preprocessing wymagający `fit` jest częścią modelu; predykcja pakietu wykonuje
+wspólną normalizację i używa progu z metadanych. Pakowanie jest lokalne i działa
+również przy `WANDB_MODE=disabled`; tracking raportów i publikacja modelu to osobne operacje.
+
+Wybrano chronologiczny baseline, opisany w [ADR-2](adr/0002-wybor-modelu.md).
+Smoke online pobiera `production`, wczytuje pakiet w nowym procesie i sprawdza
+pięć predykcji. [Dowody odbioru i przekazanie do S4](notes/sprint-3-closeout.md).
+API wykorzysta te same funkcje ładowania i predykcji.
+
 ## Historia zmian architektury
 
 | Sprint | Zmiana | Powiązany ADR |
 |---|---|---|
 | S1 | diagram v0 | — |
-| S2 | połączony graf Kedro: przygotowanie, trening i trwałe wyjścia | — |
+| S2 | połączony graf Kedro: przygotowanie, trening i trwałe wyjścia | [ADR-1](adr/0001-gdzie-zyje-przetwarzanie.md) |
+| S3 | eksperymenty, przenośne pakiety, W&B production i niezależna predykcja | [ADR-2](adr/0002-wybor-modelu.md) |

@@ -35,12 +35,16 @@ flowchart LR
     C --> D[trening i walidacja; refit dla CV]
     D --> E[wybór modelu i zamrożenie wszystkich progów]
     E --> F[opcjonalny końcowy test]
+    F --> G[pakiety wszystkich kandydatów]
+    E --> G
+    G --> H[tracking, jeśli włączony]
 ```
 
 Etapy są osobnymi nodami Kedro. Dopiero `freeze_validation_decision` tworzy
 `selection.json` z modelem, ścieżkami i progami **wszystkich** kandydatów.
 `evaluate_frozen_test` korzysta z tego snapshotu, a nie z mutowalnego raportu treningu.
-Ostatni node `track_experiment` publikuje gotowe wyniki tylko w trybie online/offline;
+Node `package_experiment_models` zapisuje pakiety wszystkich zamrożonych kandydatów,
+po teście w wariantach `_test`. Ostatni node `track_experiment` publikuje gotowe wyniki tylko w trybie online/offline;
 przy `disabled` pomija SDK. Końcowym wyjściem runnera jest `experiment_tracking`,
 a decyzja i test pozostają zapisane jako pliki JSON.
 Niezgodne dane, konfiguracja lub zmieniony snapshot blokują test. Ponowna selekcja
@@ -70,7 +74,7 @@ KEDRO_DISABLE_TELEMETRY=1 kedro run --pipelines experiments_bagged_test
 KEDRO_DISABLE_TELEMETRY=1 kedro run --pipelines experiments_crossfold_test
 ```
 
-Bez `_test` przebieg kończy się zapisaniem decyzji po walidacji. `--env ci` wybiera
+Bez `_test` pomijamy końcowy test; nadal zapisujemy decyzję, pakiety i wynik trackingu. `--env ci` wybiera
 próbkę i sam baseline, bez SDK AutoGluona/W&B. Aby sprawdzić AutoGluona na próbce,
 dodać `--env ci --params experiments.autogluon_enabled=true`.
 Na PowerShell ustawić `$env:KEDRO_DISABLE_TELEMETRY="1"` przed `kedro run ...`.
@@ -96,6 +100,8 @@ Catalog wskazuje `experiment_store`: `data/08_reporting/experiments/` dla pełny
 | `<model>_oof.json` | indeksy, etykiety i prawdopodobieństwa użyte przez CV |
 | `selection.json` | niezmienny snapshot wszystkich progów i wybór przed testem |
 | `test_metrics.json` | osobny status i metryki finalnego testu, tylko dla `_test` |
+| `packages.json` | ścieżki pakietów kandydatów w `model_package_store/<run_id>/<candidate>/` |
+| `wandb.json` | status trackingu oraz linki do runów, gdy tracking jest włączony |
 
 Fingerprint `loaded-data-csv-v1` to SHA-256 CSV wczytanego `raw_data`, z nagłówkami,
 indeksem, kolejnością i końcami linii LF. To inny hash niż bajty oryginalnego pliku
@@ -106,7 +112,10 @@ Modele są natywnymi wynikami eksperymentów: pickle sklearn albo katalog AutoGl
 `models.py` obsługuje ten lokalny zapis/odczyt; to nie jest pakiet produkcyjny z #20.
 Anton otrzymuje model, config, provenance, metryki i próg z `selection.json`.
 Przy predykcji trzeba użyć `P(y=1) >= decision_threshold`; natywne `predict()` może
-nadal używać 0,5. Docelowy pakiet, wspólny loader i alias `production` należą do #20.
+nadal używać 0,5. Pipeline zapisuje też przenośne pakiety przez wspólne funkcje #20;
+`model_package_store` to `data/06_models/packages/`, w CI `data/06_models/ci/packages/`.
+Publikacja wybranego pakietu w W&B jest osobną komendą, opisaną w
+[kontrakcie pakietu](../../src/asi_project/README.md#komendy-obsługi-pakietu).
 Pojedynczy `prediction_seconds` w holdout jest pomiarem pomocniczym, nie benchmarkiem #19.
 
 ## Zapisane wyniki porównania
@@ -126,7 +135,8 @@ Przed testem: holdout i bagging wybrały `tree_ensemble`, crossfold wybrał base
 `20261123T230547-chronological-1ba8a098`. Pełne modele pozostają poza Gitem;
 tabela jest dostępna również po czystym sklonowaniu repozytorium.
 Test był już oglądany w eksploracjach: jest wspólnym benchmarkiem, nie nowym niezależnym
-audytem. Produkcyjna decyzja pozostaje w #19 i obejmuje również koszty użycia.
+audytem. [Przyjęta decyzja ADR-2](../adr/0002-wybor-modelu.md) wybiera chronologiczny
+baseline, uwzględniając również koszty użycia.
 
 Początkowe F1=0 przy progu 0,5 było poprawnie policzone: train miał 5,0% pozytywów,
 validation 13,7%. Dobór progu i log-loss pozwoliły rozdzielić sygnał modelu od decyzji
@@ -134,7 +144,7 @@ klasyfikacyjnej; nie usuwają dryfu między okresami.
 
 ## Sprawdzenia
 
-Aktualny stan z trackingiem: **380 testów przeszło w czystym checkoutcie `b6ecf55`**,
+Odbiór #18 z trackingiem: **380 testów przeszło w czystym checkoutcie `b6ecf55`**,
 bez lokalnych ustawień; przeszły również pre-commit i kontrola diffu. Testy Git zachowują
 izolację od lokalnego podpisywania i hooków. Po review ponowiono trzy pełne przebiegi
 AutoGluona: wyniki F1 i wybory modeli pozostały zgodne z tabelą. Identyfikatory runów:
@@ -143,6 +153,8 @@ AutoGluona: wyniki F1 i wybory modeli pozostały zgodne z tabelą. Identyfikator
 Świeży holdout z W&B: `20261124T161322-holdout-b410b77e`; F1 pozostały zgodne z tabelą.
 Pierwszy run W&B odtworzył baseline S2 przy progu 0,5. Linki i potwierdzenie 17 runów
 są w [notatce W&B](sprint-3-wandb.md).
+
+Końcowy odbiór S3: [nowe środowisko, 530 testów i smoke production](sprint-3-closeout.md).
 
 Graf i wejścia nodów: [`pipeline.py`](../../src/asi_project/pipelines/experiments/pipeline.py).
 Podział odpowiedzialności: `splits.py` — granice/foldy, `models.py` — adaptery,

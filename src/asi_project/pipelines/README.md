@@ -13,5 +13,7 @@ Kedro łączy nody w pipeline’y i wczytuje konfigurację z katalogu `conf/`. N
 Polecenia uruchomienia i testów S2-2 są w [README `data_processing`](data_processing/README.md). Testy obu pipeline’ów są w [`tests/pipelines`](../../../tests/pipelines).
 
 Eksperymenty S3 ponownie używają `data_processing` i fabryki baseline’u. Komendy, kontrakt
-plików i wyniki są w notatce powyżej. Integracja W&B i docelowy pakiet modelu pozostają
-kolejnymi pracami Sprintu 3.
+plików i wyniki są w notatce powyżej. Po zamrożeniu decyzji i opcjonalnym teście pipeline
+zapisuje pakiety wszystkich kandydatów, a następnie wysyła raporty do W&B, jeśli tracking
+jest włączony. Publikacja wybranego pakietu z aliasem `production` jest osobną komendą:
+[kontrakt pakietu](../README.md#komendy-obsługi-pakietu).

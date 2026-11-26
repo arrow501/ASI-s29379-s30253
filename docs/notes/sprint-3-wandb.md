@@ -74,8 +74,9 @@ AutoGluona; baseline nie ma sztucznego limitu. Dokładne zasady refit i early st
 
 Artefakt typu `experiment-report` zawiera JSON-y konfiguracji, pochodzenia, splitu/foldów,
 metryk i decyzji; przy `_test` także `test_metrics.json`. Nie wysyłamy danych wejściowych,
-modeli ani kodu. SDK może dodawać własny artefakt `wandb-events`. Pakowanie modeli
-produkcyjnych, wspólny loader i alias `production` pozostają w #20.
+modeli ani kodu przez adapter trackingu. SDK może dodawać własny artefakt `wandb-events`.
+Pakiet modelu publikujemy osobno jako artefakt typu `model`:
+[komendy #20](../../src/asi_project/README.md#komendy-obsługi-pakietu).
 
 ## Offline, awarie i ponowienie
 
@@ -154,5 +155,6 @@ nie jest nowym treningiem ani zmianą oryginalnego SHA. Wszystkie te runy mają
 | chronological | tree_ensemble | [run](https://wandb.ai/wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/runs/fa90ce6c2500d6447cb3) |
 
 Sprawdzenia lokalne i w czystym checkoutcie `b6ecf55`: **380 testów, 0 failures**,
-w tym 20 nowych dla trackingu; pre-commit i kontrola diffu przeszły. Review Antona oraz CI po publikacji patcha
-pozostają do odbioru.
+w tym 20 nowych dla trackingu; pre-commit i kontrola diffu przeszły. To wynik odbioru #18.
+Po scaleniu wykonano także [nowy trening online z pięcioma konfiguracjami](sprint-3-online-integration.md)
+oraz [smoke production na main i w nowym środowisku](sprint-3-closeout.md).

@@ -1,5 +1,4 @@
-# Pre-flight gotowości do Sprintu 3 (koniec Sprintu 2): W&B i AutoGluon (CPU, minimalny zakres).
-# Bez pełnych eksperymentów — tylko instalacja, import i mini-trening.
+# W&B i AutoGluon dla eksperymentów S3: CPU, LightGBM i CatBoost.
 #   python -m pip install -r requirements/preflight-s3.txt -c constraints.txt
 #   python scripts/check_env.py --autogluon
 #
@@ -7,9 +6,8 @@
 # w AutoGluon). macOS: LightGBM wymaga OpenMP — przed instalacją `brew install libomp`.
 # W&B: od wersji 0.29.0 pakiet wymaga macOS 13 (Ventura) lub nowszego.
 #
-# LOCAL RELEASE CHECK (prowadząca, przed Sprintem 2; brak sieci w środowisku przygotowania):
-#   - Windows: instalacja tego pliku i `python scripts/check_env.py --autogluon`
-#   - macOS Apple Silicon: `brew install libomp`, instalacja i `check_env.py --autogluon`
-#   - w raporcie mini-treningu obecne modele LightGBM i CatBoost, `pip check` bez konfliktów
+# Sprawdzenie instalacji: check_env.py --autogluon wykonuje mini-trening obu backendów
+# oraz zapis/odczyt. Pełne eksperymenty uruchamia się osobnymi pipeline’ami Kedro.
+# Minimalny zestaw nie instaluje PyTorcha; opcjonalna kalibracja AutoGluona może być pominięta.
 wandb==0.30.0
 autogluon.tabular[lightgbm,catboost]==1.6.3

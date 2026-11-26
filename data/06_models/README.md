@@ -1,6 +1,8 @@
 # data/06_models
 
-> Scaffold for Sprint 2 — do not implement before this sprint.
+- `baseline.pkl`: baseline S2, zapisany razem z preprocessingiem.
+- `packages/<run_id>/<candidate>/`: pakiety S3 z `model/` i `metadata.json`.
+- `ci/`: oddzielne modele i pakiety z próbki CI.
 
-Model zapisany przez pipeline `data_science`; od Sprintu 3 lokalne kopie pakietu modelu (katalog z modelem i `metadata.json`).
-Zawartość katalogu (poza tym plikiem) jest ignorowana przez git.
+Ścieżki definiuje catalog Kedro. Zawartość poza README jest ignorowana przez Git.
+[Zapis, publikacja, pobranie i predykcja](../../src/asi_project/README.md#komendy-obsługi-pakietu).

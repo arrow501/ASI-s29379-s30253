@@ -1,6 +1,5 @@
 # data/02_intermediate
 
-> Scaffold for Sprint 2 — do not implement before this sprint.
-
-Dane po input normalization i training-only filtering — wyjście pipeline'u `data_processing`.
-Zawartość katalogu (poza tym plikiem) jest ignorowana przez git.
+Miejsce na opcjonalny zapis danych po normalizacji i filtrowaniu treningowym.
+Obecny catalog nie zapisuje `prepared_data`: Kedro przekazuje je w pamięci
+z `data_processing` do dalszych pipeline’ów. Zawartość poza README jest ignorowana przez Git.

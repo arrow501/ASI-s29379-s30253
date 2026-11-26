@@ -113,17 +113,17 @@ Kontrakt szczegółowy jest w [`src/asi_project/README.md`](../../src/asi_projec
 
 ## Stan odbioru
 
-- Próba deweloperska online 26.11.2026: pobrano rzeczywisty `production` wskazujący
-  na `bank-marketing-model:v0`. Nowy interpreter wykonał pięć predykcji baseline'u
-  bez targetu i bez `fit`. [Raport JSON](results/sprint-3-smoke-development.json)
-  zawiera model, wersję, pochodzenie, wyniki i hash użytego skryptu.
-  Próba korzystała z istniejącego środowiska conda i kopii roboczej bazującej na
-  `cf8a929` z niezacommitowaną implementacją S3-4 (`git_dirty=true`). To potwierdzenie
-  działania kodu online; końcowy odbiór instrukcji wymaga opublikowanej wersji S3-4.
-- Testy lokalne: **529 passed, 1 skipped**, w tym rzeczywisty AutoGluon. Pominięto
-  wyłącznie test tworzenia symlinków, niedostępny w tym Windows.
-- Wszystkie hooki pre-commit przeszły dla plików repozytorium i nowych plików S3-4.
-  `kedro run --env ci`, `experiments_test` z wyłączonym AutoGluonem i lokalny smoke
-  nowego pakietu baseline'u zakończyły się kodem 0.
-- Świeży checkout po publikacji gałęzi S3-4: do potwierdzenia przez Antona powyższą procedurą.
-- Review Arrow i zielone workflow na końcowym `main`: do potwierdzenia po publikacji/scaleniu.
+- [Próba deweloperska](results/sprint-3-smoke-development.json) została zachowana jako
+  wcześniejszy wynik na niezacommitowanej implementacji, w istniejącym środowisku.
+- Końcowe review Arrow: czysty checkout `e9b3084`, nowe środowisko conda z
+  `environment.yml`, instalacja projektu i trzech plików requirements z constraints.
+  **530 testów przeszło, bez pominięć**, w tym rzeczywisty AutoGluon.
+  `pip check`, `check_env.py --autogluon`, pre-commit i `kedro run --env ci` przeszły.
+  [Potwierdzenie środowiska](results/sprint-3-fresh-env-verification.json)
+  i [smoke online](results/sprint-3-smoke-fresh-env.json) dotyczą Linuxa.
+- Anton potwierdził własny odbiór instrukcji na świeżym checkoutcie.
+- [PR #28](https://github.com/arrow501/ASI-s29379-s30253/pull/28) otrzymał review Arrow
+  i został scalony. [Smoke online na main](https://github.com/arrow501/ASI-s29379-s30253/actions/runs/45860830536)
+  przeszedł na `eb88556`: `production` wskazał `bank-marketing-model:v0`, nowy proces
+  wykonał pięć predykcji bez treningu. [Oryginalny raport Actions](results/sprint-3-smoke-main.json).
+- Stan zwykłego CI i pełna checklista sprintu: [zamknięcie S3](sprint-3-closeout.md).
