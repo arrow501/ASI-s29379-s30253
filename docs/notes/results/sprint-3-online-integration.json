@@ -1,0 +1,288 @@
+{
+  "source_run_id": "20261126T150209-chronological-b3ac4ba5",
+  "checked_utc": "2026-11-26T15:04:42.119394+00:00",
+  "git_sha": "52a0956b8029a4edc6ce3b4de1f7eaa80eb22b8a",
+  "git_dirty": false,
+  "data_fingerprint": "2a81c082b2a35c24ae36ba337231bd88e4a417d0a5e02346169078fac5a92253",
+  "n_test": 9043,
+  "publication": "fresh_pipeline",
+  "production_alias_changed": false,
+  "selected_candidate": "baseline",
+  "runs": {
+    "baseline": {
+      "url": "https://wandb.ai/wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/runs/f269a5fb2abeb582b077",
+      "state": "finished",
+      "numeric_metrics_checked": 38,
+      "report_files_checked": [
+        "config.json",
+        "provenance.json",
+        "metrics.json",
+        "selection.json",
+        "folds.json",
+        "test_metrics.json"
+      ],
+      "test": {
+        "accuracy": 0.5568948357845848,
+        "precision": 0.3955345797785442,
+        "recall": 0.7629551820728291,
+        "f1": 0.5209802749551703,
+        "confusion_matrix": {
+          "tn": 2857,
+          "fp": 3330,
+          "fn": 677,
+          "tp": 2179
+        }
+      }
+    },
+    "catboost": {
+      "url": "https://wandb.ai/wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/runs/d6c7497d4643149ea9ad",
+      "state": "finished",
+      "numeric_metrics_checked": 38,
+      "report_files_checked": [
+        "config.json",
+        "provenance.json",
+        "metrics.json",
+        "selection.json",
+        "folds.json",
+        "test_metrics.json"
+      ],
+      "test": {
+        "accuracy": 0.31582439455932765,
+        "precision": 0.31582439455932765,
+        "recall": 1.0,
+        "f1": 0.4800403395243298,
+        "confusion_matrix": {
+          "tn": 0,
+          "fp": 6187,
+          "fn": 0,
+          "tp": 2856
+        }
+      }
+    },
+    "gbm_large": {
+      "url": "https://wandb.ai/wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/runs/5b631d3c0083bce827ab",
+      "state": "finished",
+      "numeric_metrics_checked": 38,
+      "report_files_checked": [
+        "config.json",
+        "provenance.json",
+        "metrics.json",
+        "selection.json",
+        "folds.json",
+        "test_metrics.json"
+      ],
+      "test": {
+        "accuracy": 0.38095764679862876,
+        "precision": 0.327416918429003,
+        "recall": 0.9107142857142857,
+        "f1": 0.4816666666666667,
+        "confusion_matrix": {
+          "tn": 844,
+          "fp": 5343,
+          "fn": 255,
+          "tp": 2601
+        }
+      }
+    },
+    "gbm_small": {
+      "url": "https://wandb.ai/wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/runs/dc512208d916ebae3903",
+      "state": "finished",
+      "numeric_metrics_checked": 38,
+      "report_files_checked": [
+        "config.json",
+        "provenance.json",
+        "metrics.json",
+        "selection.json",
+        "folds.json",
+        "test_metrics.json"
+      ],
+      "test": {
+        "accuracy": 0.3941169965719341,
+        "precision": 0.3347195967233774,
+        "recall": 0.9299719887955182,
+        "f1": 0.4922620702437216,
+        "confusion_matrix": {
+          "tn": 908,
+          "fp": 5279,
+          "fn": 200,
+          "tp": 2656
+        }
+      }
+    },
+    "tree_ensemble": {
+      "url": "https://wandb.ai/wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/runs/3cc20283dade8ecd4d55",
+      "state": "finished",
+      "numeric_metrics_checked": 38,
+      "report_files_checked": [
+        "config.json",
+        "provenance.json",
+        "metrics.json",
+        "selection.json",
+        "folds.json",
+        "test_metrics.json"
+      ],
+      "test": {
+        "accuracy": 0.31582439455932765,
+        "precision": 0.31582439455932765,
+        "recall": 1.0,
+        "f1": 0.4800403395243298,
+        "confusion_matrix": {
+          "tn": 0,
+          "fp": 6187,
+          "fn": 0,
+          "tp": 2856
+        }
+      }
+    }
+  },
+  "packages": {
+    "baseline": {
+      "artifact_ref": "wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/s3-online-check-20261126T150209-chronological-b3ac4ba5-baseline:v0",
+      "aliases": [
+        "latest"
+      ],
+      "inventory": {
+        "bytes": 6407,
+        "files": 2,
+        "sha256": "080aa92cc4344bbe5ef39a34a8c8a1b9edd2922e567857ce0df090da79ec8f41"
+      },
+      "test": {
+        "accuracy": 0.5568948357845848,
+        "precision": 0.3955345797785442,
+        "recall": 0.7629551820728291,
+        "f1": 0.5209802749551703,
+        "confusion_matrix": {
+          "tn": 2857,
+          "fp": 3330,
+          "fn": 677,
+          "tp": 2179
+        }
+      }
+    },
+    "catboost": {
+      "artifact_ref": "wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/s3-online-check-20261126T150209-chronological-b3ac4ba5-catboost:v0",
+      "aliases": [
+        "latest"
+      ],
+      "inventory": {
+        "bytes": 96241,
+        "files": 9,
+        "sha256": "c1b5e450d8eae0d52175446ca0ce4481425a878595059914bb341ed2d6a2f625"
+      },
+      "test": {
+        "accuracy": 0.31582439455932765,
+        "precision": 0.31582439455932765,
+        "recall": 1.0,
+        "f1": 0.4800403395243298,
+        "confusion_matrix": {
+          "tn": 0,
+          "fp": 6187,
+          "fn": 0,
+          "tp": 2856
+        }
+      }
+    },
+    "gbm_large": {
+      "artifact_ref": "wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/s3-online-check-20261126T150209-chronological-b3ac4ba5-gbm_large:v0",
+      "aliases": [
+        "latest"
+      ],
+      "inventory": {
+        "bytes": 252643,
+        "files": 9,
+        "sha256": "251e45d44670ec4d75e3b3148bf3a41ba92d8a9b548beb25e94070c244445b0f"
+      },
+      "test": {
+        "accuracy": 0.38095764679862876,
+        "precision": 0.327416918429003,
+        "recall": 0.9107142857142857,
+        "f1": 0.4816666666666667,
+        "confusion_matrix": {
+          "tn": 844,
+          "fp": 5343,
+          "fn": 255,
+          "tp": 2601
+        }
+      }
+    },
+    "gbm_small": {
+      "artifact_ref": "wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/s3-online-check-20261126T150209-chronological-b3ac4ba5-gbm_small:v0",
+      "aliases": [
+        "latest"
+      ],
+      "inventory": {
+        "bytes": 141973,
+        "files": 9,
+        "sha256": "f79d2325a8142722bb1463cc99f623687e02076c4e945c4a75fb561ed98909f2"
+      },
+      "test": {
+        "accuracy": 0.3941169965719341,
+        "precision": 0.3347195967233774,
+        "recall": 0.9299719887955182,
+        "f1": 0.4922620702437216,
+        "confusion_matrix": {
+          "tn": 908,
+          "fp": 5279,
+          "fn": 200,
+          "tp": 2656
+        }
+      }
+    },
+    "tree_ensemble": {
+      "artifact_ref": "wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/s3-online-check-20261126T150209-chronological-b3ac4ba5-tree_ensemble:v0",
+      "aliases": [
+        "latest"
+      ],
+      "inventory": {
+        "bytes": 122609869,
+        "files": 10,
+        "sha256": "9fcf144f6b728c0a9bdef0747d5d1530c3a72947ff1fc55bb2302922dd8071f1"
+      },
+      "test": {
+        "accuracy": 0.31582439455932765,
+        "precision": 0.31582439455932765,
+        "recall": 1.0,
+        "f1": 0.4800403395243298,
+        "confusion_matrix": {
+          "tn": 0,
+          "fp": 6187,
+          "fn": 0,
+          "tp": 2856
+        }
+      }
+    }
+  },
+  "independent_smoke": {
+    "baseline": {
+      "rows": 9043,
+      "threshold": 0.07166958577186548,
+      "positive_predictions": 5509
+    },
+    "catboost": {
+      "rows": 9043,
+      "threshold": 0.11594462394714355,
+      "positive_predictions": 9043
+    },
+    "gbm_large": {
+      "rows": 9043,
+      "threshold": 0.051560044288635254,
+      "positive_predictions": 7944
+    },
+    "gbm_small": {
+      "rows": 9043,
+      "threshold": 0.05283867567777634,
+      "positive_predictions": 7935
+    },
+    "tree_ensemble": {
+      "rows": 9043,
+      "threshold": 0.1214907243847847,
+      "positive_predictions": 9043
+    }
+  },
+  "status": "completed",
+  "completed_utc": "2026-11-26T15:07:50.249442+00:00",
+  "optional_torch": {
+    "installed": false,
+    "probability_calibration": "skipped by AutoGluon"
+  }
+}

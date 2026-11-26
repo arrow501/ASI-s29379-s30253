@@ -45,6 +45,9 @@ jobs:
       - name: Zależności Kedro (Sprint 2)
         run: python -m pip install -r requirements/preflight-s2.txt -c constraints.txt
 
+      - name: Zależności pomiarów lokalnych (Sprint 3)
+        run: python -m pip install -r requirements/benchmark-s3.txt -c constraints.txt
+
       - name: Wersje bibliotek
         run: python scripts/check_env.py
 

@@ -1,0 +1,19 @@
+{
+  "requested_ref": "wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/bank-marketing-model:production",
+  "artifact_ref": "wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/bank-marketing-model:v0",
+  "git_sha": "c66e7f81e3e8bb1aa3630e165b7f24c768250508",
+  "data_fingerprint": "2a81c082b2a35c24ae36ba337231bd88e4a417d0a5e02346169078fac5a92253",
+  "aliases": [
+    "latest",
+    "production"
+  ],
+  "status": "verified",
+  "rows": 5,
+  "source_run_id": "20261123T232543-chronological-3d2c20c4",
+  "decision_threshold": 0.07166958577186548,
+  "artifact": {
+    "bytes": 6406,
+    "files": 2,
+    "sha256": "089a28947016594322108d190ee52ae11d94482a500b8628a7aa663db948f1d5"
+  }
+}

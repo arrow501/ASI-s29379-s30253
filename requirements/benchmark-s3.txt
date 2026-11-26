@@ -1,0 +1,4 @@
+# Pomiary RSS w świeżych procesach; modele AutoGluona wymagają preflight-s3.txt.
+# python -m pip install -r requirements/benchmark-s3.txt -c constraints.txt
+psutil==7.2.2
+threadpoolctl==3.6.0
