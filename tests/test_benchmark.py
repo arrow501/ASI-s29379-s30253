@@ -280,3 +280,144 @@ def test_existing_output_is_preserved_before_loading_data(tmp_path):
     with pytest.raises(FileExistsError):
         benchmark.main(["--run", str(tmp_path), "--output", str(path)])
     assert path.read_text() == "keep"
+
+
+@pytest.fixture
+def packaged_run(frozen_run, tmp_path):
+    from asi_project import model_package as package_api
+
+    root, raw = frozen_run
+    store = tmp_path / "packages"
+    selection = read_json(root / "selection.json")
+    for name, candidate in selection["candidates"].items():
+        metadata = package_api.build_model_metadata(root, name, raw, include_test=True)
+        model = package_api.load_native_model(candidate["model_path"], candidate["model_kind"])
+        package_api.save_model_package(model, metadata, store / root.name / name)
+    return root, raw, store
+
+
+def test_package_measurement_uses_real_loader_and_raw_input_in_new_process(packaged_run):
+    root, raw, store = packaged_run
+    report = benchmark.benchmark_runs(
+        [root], raw, packages_root=store, warmup=1, repeats=2, threads=1
+    )
+    assert report["artifact_scope"] == "model_package"
+    assert report["n_test"] == 20
+    assert {row["candidate"] for row in report["results"]} == {"baseline", "dummy"}
+    for row in report["results"]:
+        assert row["pid"] != os.getpid()
+        assert row["artifact"] == benchmark.artifact_inventory(store / root.name / row["candidate"])
+        assert (
+            row["metrics"] == report["sources"][root.name]["test_metrics"][row["candidate"]]["test"]
+        )
+    text = benchmark.render_tables(report)
+    assert "Porównanie pakietów" in text and "normalizację wejścia" in text
+    assert "To nie są pomiary paczki" not in text
+
+
+@pytest.mark.parametrize(
+    "field,value",
+    [
+        ("source_run_id", "another-run"),
+        ("candidate_name", "dummy"),
+        ("negative_class", "unexpected"),
+        ("decision_threshold", 0.99),
+        ("git_sha", "a" * 40),
+        ("data_fingerprint", "a" * 64),
+        ("metrics.test.f1", 0.123),
+    ],
+)
+def test_mismatched_package_rejected_before_any_worker(packaged_run, monkeypatch, field, value):
+    root, raw, store = packaged_run
+    path = store / root.name / "baseline" / "metadata.json"
+    metadata = read_json(path)
+    destination = metadata
+    parts = field.split(".")
+    for part in parts[:-1]:
+        destination = destination[part]
+    destination[parts[-1]] = value
+    write_json(path, metadata)
+    monkeypatch.setattr(
+        benchmark,
+        "run_worker",
+        lambda *a, **kw: pytest.fail("worker started before package validation"),
+    )
+    with pytest.raises(ValueError, match="Package"):
+        benchmark.benchmark_runs([root], raw, packages_root=store)
+
+
+def test_changed_package_probabilities_rejected_even_with_unchanged_metadata(packaged_run):
+    root, raw, store = packaged_run
+    path = store / root.name / "baseline" / "model" / "pipeline.pkl"
+    model = pickle.loads(path.read_bytes())
+    model.named_steps["classifier"].coef_ *= 0.5
+    path.write_bytes(pickle.dumps(model))
+    with pytest.raises(RuntimeError, match="Not equal to tolerance"):
+        benchmark.benchmark_runs([root], raw, packages_root=store, warmup=1, repeats=1, threads=1)
+
+
+def test_missing_package_rejected_before_worker(packaged_run, monkeypatch):
+    root, raw, store = packaged_run
+    (store / root.name / "dummy" / "metadata.json").unlink()
+    monkeypatch.setattr(
+        benchmark,
+        "run_worker",
+        lambda *a, **kw: pytest.fail("worker started before all packages were checked"),
+    )
+    with pytest.raises(FileNotFoundError):
+        benchmark.benchmark_runs([root], raw, packages_root=store)
+
+
+@pytest.mark.parametrize("operation", ["render", "benchmark"])
+def test_cli_removes_partial_output_after_write_failure(
+    tmp_path, monkeypatch, operation, small_report
+):
+    output = tmp_path / "report.txt"
+    real_open = Path.open
+    if operation == "render":
+        source = tmp_path / "input.json"
+        source.write_text(json.dumps(small_report), encoding="utf-8")
+        args = ["--render", str(source), "--output", str(output)]
+    else:
+        # Isolate output I/O from model measurements; keep the real CLI/config loading.
+        monkeypatch.setattr(benchmark, "benchmark_runs", lambda *a, **kw: small_report)
+        args = ["--run", str(tmp_path), "--env", "ci", "--output", str(output)]
+
+    class FailingWriter:
+        def __enter__(self):
+            self.stream = real_open(output, "x", encoding="utf-8")
+            return self
+
+        def write(self, content):
+            self.stream.write(content[:4])
+            self.stream.flush()
+            assert output.read_text() == content[:4]
+            raise OSError("disk full")
+
+        def __exit__(self, *args):
+            self.stream.close()
+
+    def open_path(path, *args, **kwargs):
+        if path == output and args and args[0] == "x":
+            return FailingWriter()
+        return real_open(path, *args, **kwargs)
+
+    # Exercise each real CLI branch with bytes written before the injected failure.
+    monkeypatch.setattr(Path, "open", open_path)
+    with pytest.raises(OSError, match="disk full"):
+        benchmark.main(args)
+    assert not output.exists()
+    monkeypatch.setattr(Path, "open", real_open)
+    assert benchmark.main(args) == 0
+    if operation == "render":
+        assert output.read_text(encoding="utf-8") == benchmark.render_tables(small_report)
+    else:
+        assert json.loads(output.read_text(encoding="utf-8")) == small_report
+
+
+def test_output_writer_does_not_remove_or_replace_existing_result(tmp_path):
+    output = tmp_path / "report.json"
+    output.write_bytes(b"existing result")
+    with pytest.raises(FileExistsError):
+        benchmark.write_new_output(output, "replacement")
+    assert output.read_bytes() == b"existing result"

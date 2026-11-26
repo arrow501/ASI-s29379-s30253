@@ -62,7 +62,7 @@ def timing_summary(samples, rows):
     }
 
 
-def measure_native(request, X, y):
+def measure_model(request, X, y):
     """Called only in a child; no training, threshold selection or package creation."""
     import psutil
     from threadpoolctl import threadpool_limits
@@ -73,11 +73,19 @@ def measure_native(request, X, y):
     process = psutil.Process()
     rss_before = process.memory_info().rss
     start = time.perf_counter()
-    model = load_native_model(request["model_path"], request["model_kind"])
+    package = request.get("package_dir")
+    if package:
+        from asi_project.model_package import load_model_package, predict_model_package
+
+        model, metadata = load_model_package(package)
+    else:
+        model = load_native_model(request["model_path"], request["model_kind"])
     load_seconds = time.perf_counter() - start
     rss_loaded = process.memory_info().rss
 
     def predict(frame):
+        if package:
+            return predict_model_package(model, metadata, frame)
         return (positive_probabilities(model, frame) >= request["decision_threshold"]).astype(int)
 
     # Environment limits apply before backend import; threadpoolctl also covers loaded BLAS/OpenMP.
@@ -99,6 +107,21 @@ def measure_native(request, X, y):
             start = time.perf_counter()
             predict(single)
             single_samples.append(time.perf_counter() - start)
+    if package:
+        import numpy as np
+
+        from asi_project.data import normalize_input
+
+        # Reference loading is outside the measured interval and RSS snapshots.
+        # Compare probabilities, not just aggregate metrics or thresholded labels.
+        reference = load_native_model(request["model_path"], request["model_kind"])
+        np.testing.assert_allclose(
+            prediction["probability_positive"].to_numpy(),
+            positive_probabilities(reference, normalize_input(X)),
+            rtol=1e-12,
+            atol=1e-12,
+        )
+        prediction = prediction["prediction"].eq(metadata["positive_class"]).astype(int)
     return {
         "pid": os.getpid(),
         "metrics": compute_metrics(y, prediction),
@@ -187,9 +210,51 @@ def experiment_inputs(run, raw):
     return config, provenance, selection, tested, X, y
 
 
+def validate_package_source(metadata, source, run_id, name, classes):
+    """Bind a package to the frozen candidate before trusting its measurements."""
+    from asi_project.data import label_text
+    from asi_project.model_package import validate_metadata
+
+    validate_metadata(metadata)
+    project = source["config"]["project"]
+    provenance = source["provenance"]
+    candidate = source["candidates"][name]
+    positive = label_text(project["positive_class"])
+    if len(classes) != 2 or positive not in classes:
+        raise ValueError("Package source must have two target classes.")
+    expected = {
+        **{
+            key: project[key]
+            for key in (
+                "dataset_id",
+                "numeric_features",
+                "categorical_features",
+                "target",
+                "positive_class",
+            )
+        },
+        **{key: provenance[key] for key in ("git_sha", "git_dirty", "data_fingerprint")},
+        **{key: candidate[key] for key in ("model_kind", "decision_threshold", "threshold_source")},
+        "positive_class": positive,
+        "negative_class": next(value for value in classes if value != positive),
+        "source_run_id": run_id,
+        "candidate_name": name,
+        "protocol": source["config"]["protocol"],
+        "data_mode": source["config"]["data_mode"],
+        "versions": {**provenance["versions"], "python": provenance["python"]},
+    }
+    if any(metadata.get(key) != value for key, value in expected.items()):
+        raise ValueError("Package metadata differs from the frozen source candidate.")
+    if metadata["metrics"].get("test") != source["test_metrics"][name]["test"]:
+        raise ValueError("Package test metrics differ from the frozen source.")
+
+
 def validate_report(report):
     """Reject partial rows and inconsistent arithmetic before persisting a comparison."""
-    if report["schema_version"] != 1 or report["artifact_scope"] != "native_experiment":
+    if report["schema_version"] != 1 or report["artifact_scope"] not in {
+        "native_experiment",
+        "model_package",
+    }:
         raise ValueError("Unsupported benchmark schema or scope.")
     expected = {
         (run, name) for run, source in report["sources"].items() for name in source["candidates"]
@@ -268,11 +333,20 @@ def cpu_description():
 def render_tables(report):
     """Render measured values only; MiB = 2**20 bytes, timings are warm medians."""
     validate_report(report)
+    packaged = report["artifact_scope"] == "model_package"
     lines = [
-        "# Porównanie natywnych modeli — Sprint 3",
+        "# Porównanie pakietów modeli — Sprint 3"
+        if packaged
+        else "# Porównanie natywnych modeli — Sprint 3",
         "",
-        "Rozmiar obejmuje natywny artefakt, a RSS proces wraz z bibliotekami. "
-        "To nie są pomiary paczki produkcyjnej z #20.",
+        (
+            "Pomiar wspólnego loadera i predykcji z #20; rozmiar obejmuje cały pakiet. "
+            "Predykcja zawiera normalizację wejścia, preprocessing i zapisany próg. "
+            "RSS obejmuje proces wraz z bibliotekami."
+            if packaged
+            else "Rozmiar obejmuje natywny artefakt, a RSS proces wraz z bibliotekami. "
+            "To nie są pomiary paczki produkcyjnej z #20."
+        ),
         "",
     ]
     for run, source in report["sources"].items():
@@ -307,7 +381,7 @@ def render_tables(report):
     return "\n".join(lines)
 
 
-def benchmark_runs(runs, raw, *, warmup=2, repeats=5, threads=8, timeout=600):
+def benchmark_runs(runs, raw, *, warmup=2, repeats=5, threads=8, timeout=600, packages_root=None):
     if any(type(v) is not int or v < 1 for v in (warmup, repeats, threads, timeout)):
         raise ValueError("Warmup, repeats, threads and timeout must be positive integers.")
     runs = [Path(run).resolve() for run in runs]
@@ -317,7 +391,7 @@ def benchmark_runs(runs, raw, *, warmup=2, repeats=5, threads=8, timeout=600):
 
     report = {
         "schema_version": 1,
-        "artifact_scope": "native_experiment",
+        "artifact_scope": "model_package" if packages_root is not None else "native_experiment",
         "created_utc": datetime.now(UTC).isoformat(),
         "benchmark_code": {
             **git_provenance(),
@@ -363,20 +437,51 @@ def benchmark_runs(runs, raw, *, warmup=2, repeats=5, threads=8, timeout=600):
             "test_metrics": tested["results"],
             "wandb_url": None,
         }
+    # Validate all package manifests before starting any measurement worker.
+    if packages_root is not None:
+        from asi_project import model_package
+        from asi_project.data import target_classes
+
+        report["benchmark_code"]["package_module_sha256"] = hashlib.sha256(
+            Path(model_package.__file__).read_bytes()
+        ).hexdigest()
+    packages = {}
+    if packages_root is not None:
+        for run, selection, _X, _y in inputs:
+            source = report["sources"][run.name]
+            for name in selection["candidates"]:
+                directory = Path(packages_root).resolve() / run.name / name
+                metadata = read_json(directory / "metadata.json")
+                validate_package_source(
+                    metadata,
+                    source,
+                    run.name,
+                    name,
+                    target_classes(raw[source["config"]["project"]["target"]]),
+                )
+                packages[(run.name, name)] = directory
     report["n_test"] = len(inputs[0][3])
     report["test_features_fingerprint"] = common[1]
     report["test_target_fingerprint"] = common[2]
     for run, selection, X, y in inputs:
         for name, candidate in selection["candidates"].items():
             print(f"Benchmark: {run.name} / {name}", flush=True, file=sys.stderr)
-            artifact = artifact_inventory(candidate["model_path"])
+            package = packages.get((run.name, name))
+            artifact_path = package or candidate["model_path"]
+            artifact = artifact_inventory(artifact_path)
+            native_inventory = artifact_inventory(candidate["model_path"]) if package else artifact
+            request = {**candidate, "warmup": warmup, "repeats": repeats, "threads": threads}
+            if package:
+                request["package_dir"] = str(package)
             measurement = run_worker(
-                {**candidate, "warmup": warmup, "repeats": repeats, "threads": threads},
-                X,
+                request,
+                raw.loc[X.index, X.columns] if package else X,
                 y,
                 timeout=timeout,
             )
-            if artifact != artifact_inventory(candidate["model_path"]):
+            if artifact != artifact_inventory(
+                artifact_path
+            ) or native_inventory != artifact_inventory(candidate["model_path"]):
                 raise ValueError("Artifact changed during benchmark.")
             report["results"].append(
                 {
@@ -391,6 +496,20 @@ def benchmark_runs(runs, raw, *, warmup=2, repeats=5, threads=8, timeout=600):
     return report
 
 
+def write_new_output(path, content):
+    """Keep existing results and remove our partial output if writing fails."""
+    path = Path(path)
+    created = False
+    try:
+        with path.open("x", encoding="utf-8") as stream:
+            created = True
+            stream.write(content)
+    except (OSError, UnicodeError):
+        if created:
+            path.unlink(missing_ok=True)
+        raise
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--worker", type=Path, help=argparse.SUPPRESS)
@@ -398,6 +517,11 @@ def main(argv=None):
     parser.add_argument("--run", action="append", type=Path)
     parser.add_argument("--output", type=Path)
     parser.add_argument("--env", default="local")
+    parser.add_argument(
+        "--packages-root",
+        type=Path,
+        help="Measure packages at ROOT/run_id/candidate using the shared #20 loader",
+    )
     parser.add_argument("--warmup", type=int, default=2)
     parser.add_argument("--repeats", type=int, default=5)
     parser.add_argument("--threads", type=int, default=8)
@@ -406,7 +530,7 @@ def main(argv=None):
     if args.worker:
         request = read_json(args.worker / "request.json")
         X, y = pickle.loads((args.worker / "input.pkl").read_bytes())
-        result = measure_native(request, X, y)
+        result = measure_model(request, X, y)
         (args.worker / "response.json").write_text(
             json.dumps(result, allow_nan=False), encoding="utf-8"
         )
@@ -415,8 +539,7 @@ def main(argv=None):
         if args.output is None:
             parser.error("--render requires --output")
         content = render_tables(read_json(args.render))
-        with args.output.open("x", encoding="utf-8") as stream:
-            stream.write(content)
+        write_new_output(args.output, content)
         return 0
     if not args.run or args.output is None:
         parser.error("--run and --output are required")
@@ -438,11 +561,11 @@ def main(argv=None):
         repeats=args.repeats,
         threads=args.threads,
         timeout=args.timeout,
+        packages_root=args.packages_root,
     )
     args.output.parent.mkdir(parents=True, exist_ok=True)
     content = json.dumps(report, indent=2, allow_nan=False) + "\n"
-    with args.output.open("x", encoding="utf-8") as stream:
-        stream.write(content)
+    write_new_output(args.output, content)
     return 0
 
 
