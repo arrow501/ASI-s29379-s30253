@@ -1,8 +1,13 @@
 # Model Card — Bank Marketing
 
-Stan: **model wybrany wspólnie; publikacja `production` w toku** (26.11.2026).
-Wybór opisuje zaakceptowany [ADR-2](adr/0002-wybor-modelu.md). Do uzupełnienia
-po publikacji pozostają konkretna wersja paczki i link do artefaktu modelu.
+Stan: **model opublikowany jako `production`, wersja `v0`** (26.11.2026).
+Wybór opisuje zaakceptowany [ADR-2](adr/0002-wybor-modelu.md).
+[Potwierdzenie publikacji i pobrania](notes/results/sprint-3-production.json).
+
+```text
+wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/bank-marketing-model:production
+wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/bank-marketing-model:v0
+```
 
 ## Model i pochodzenie
 
@@ -18,7 +23,7 @@ po publikacji pozostają konkretna wersja paczki i link do artefaktu modelu.
   `git_dirty=true`; sam SHA nie odtwarza całego ówczesnego kodu.
 - Wersje treningu: Python 3.11.17, scikit-learn 1.7.2, numpy 2.2.6, pandas 2.3.3.
   Model wyeksportowano do lokalnego pakietu #20 z preprocessingiem i metadanymi;
-  wersja W&B pozostaje do zapisania po publikacji. Pełne pochodzenie i digest modelu: [raport JSON](notes/results/sprint-3-native-benchmark.json).
+  pakiet jest opublikowany w W&B jako `bank-marketing-model:v0`. Pełne pochodzenie i digest modelu: [raport JSON](notes/results/sprint-3-native-benchmark.json).
 - [Run W&B tego modelu](https://wandb.ai/wnukdominika-polish-japanese-academy-of-information-tec/ASI-s29379-s30253/runs/b4d90586db1e9551327d):
   metryki i raporty zweryfikowane przez API. To raport eksperymentu, nie artefakt `production`.
   Dostęp jest [tymczasowy](notes/sprint-3-wandb.md); wyniki zachowujemy także w repo.
@@ -67,8 +72,8 @@ Koszty wczytywania, predykcji, natywnego rozmiaru i RSS: [raport porównania](no
 #20: 6406 B, mediana batcha 9043 rekordów 23,72 ms, pojedynczej predykcji 2,83 ms,
 RSS po rozgrzewce 185,8 MiB. Predykcja obejmuje normalizację wejścia i próg.
 Pomiary wykonano na poprawionej wersji #20 (`7bfd06f`), po testach integracji,
-zgodnie z metodą opisaną w raporcie porównania. To nie jest potwierdzenie
-pobrania artefaktu `production` z W&B.
+zgodnie z metodą opisaną w raporcie porównania. Po publikacji dodatkowo pobrano `production` wskazujące na `v0`, sprawdzono digest pakietu
+i pięć predykcji bez targetu. Niezależny odbiór środowiska CI pozostaje w #21.
 
 ## Ograniczenia
 

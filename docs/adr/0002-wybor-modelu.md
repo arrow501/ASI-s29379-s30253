@@ -71,9 +71,10 @@ a wyniki kolejnych okien są zmienne. Test był wcześniej oglądany w eksplorac
 wyniki traktujemy jako benchmark, nie niezależny audyt generalizacji.
 Ograniczenia i kontrakt wejścia opisuje [Model Card](../model_card.md).
 
-Wybór modelu jest zatwierdzony. Do wdrożenia pozostają publikacja pakietu z aliasem
-`production` i zapis konkretnej wersji w #20 oraz niezależny smoke pobranego artefaktu
-w #21. Wersję i link do artefaktu dopiszemy w Model Card po publikacji.
+Wybrany pakiet opublikowano jako `bank-marketing-model:v0` z aliasem `production`.
+Pobranie po aliasie, digest i pięć predykcji zostały sprawdzone. Pełny identyfikator
+jest w [Model Card](../model_card.md) i [potwierdzeniu](../notes/results/sprint-3-production.json).
+Pozostaje niezależny odbiór CI w #21.
 
 ## Historia
 
@@ -81,3 +82,4 @@ w #21. Wersję i link do artefaktu dopiszemy w Model Card po publikacji.
 | --- | --- |
 | 2026-11-24 | Propozycja wyboru po lokalnym porównaniu modeli |
 | 2026-11-26 | Wspólna akceptacja baseline’u i potwierdzenie pomiarów pakietów przez loader #20 |
+| 2026-11-26 | Publikacja wybranego pakietu jako `bank-marketing-model:v0`, alias `production`; potwierdzone pobranie i predykcja |

@@ -1,8 +1,8 @@
 # Sprint 3 — porównanie modeli (#19)
 
 Owner: Arrow; review: Anton. Stan na 26.11.2026: wybór chronologicznego baseline’u
-zatwierdzony przez obie osoby. Zmierzono też pakiety przez loader #20; publikacja
-`production` i zapis konkretnej wersji pozostają do wykonania.
+zatwierdzony przez obie osoby. Pakiet opublikowano jako `bank-marketing-model:v0`
+z aliasem `production`; [potwierdzenie](results/sprint-3-production.json) zawiera pełny adres.
 
 ## Wynik i rekomendacja
 
@@ -211,5 +211,5 @@ CI na Windows/macOS nie zostało jeszcze uruchomione dla tej gałęzi.
 - Review porównania przez Antona. #25 jest już połączony z `main`; integracja
   z poprawionym #20 i pomiary pięciu pakietów są potwierdzone powyżej.
 - Wybór baseline’u został zatwierdzony przez obie osoby; nie czekamy na ponowną decyzję.
-- Po publikacji z #20 dopisać konkretną wersję artefaktu i link `production`
-  w ADR-2 oraz Model Card. Niezależny smoke pobranego modelu należy do #21.
+- Publikacja `bank-marketing-model:v0` z aliasem `production`, pobranie i pięć predykcji są potwierdzone.
+  Pełny adres jest w Model Card; niezależny odbiór CI należy do #21.
