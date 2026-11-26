@@ -41,18 +41,19 @@ Szczegóły: `docs/notes/sprint-2-handoff.md`.
 | `manage_model_package.py publish` | publikacja pakietu jako W&B Artifact; `--production` po zatwierdzeniu wyboru S3-2 |
 | `manage_model_package.py download` | pobranie wersji lub aliasu i zapis identyfikatora konkretnej wersji |
 | `predict_model_package.py` | wczytanie pakietu i predykcja CSV przez wspólny interfejs, bez treningu i W&B |
+| `smoke_model.py` | pięć predykcji w nowym procesie; lokalny pakiet dla CI albo rzeczywiste pobranie W&B `production` z zapisem konkretnej wersji |
 
 [Kompletne komendy PowerShell](../src/asi_project/README.md#komendy-obsługi-pakietu)
 opisują środowisko, separatory, wersje artefaktów i lokalizację potwierdzeń.
-Sprawdzenie rzeczywistego `production` w niezależnym smoke teście należy do S3-4.
+Komendy odbioru S3-4 i rozróżnienie lokalnego CI od W&B online:
+[smoke test produkcyjnego modelu](../docs/notes/sprint-3-smoke-test.md).
 
-## Future scaffold (Sprinty 3–6)
+## Future scaffold (Sprinty 4–6)
 
-> Scaffold for Sprints 3–6 — do not implement before these sprints.
+> Scaffold for Sprints 4–6 — do not implement before these sprints.
 
 | Skrypt | Sprint | Kontrakt |
 |---|---|---|
-| smoke modelu | S3 | pobranie pakietu `production` z W&B → wczytanie w czystym procesie → predykcja 5 wierszy → sprawdzenie schematu odpowiedzi |
 | wspólny smoke API | S4 → S6 | `/healthz` → tryb persistence → `/predict` z tokenem → kontrakt odpowiedzi → w trybie `sql` zapisany rekord, w trybie `disabled` brak wymogu zapisu; ten sam skrypt na kontenerze, na compose i na Cloud Run |
 
 Skrypt wdrożenia (`deploy.sh`, Sprint 6) znajdzie się w katalogu `deploy/`.

@@ -71,6 +71,12 @@ jobs:
       - name: Kedro na próbce CI
         run: kedro run --env ci
 
+      - name: Lokalny smoke pakietu bez W&B i AutoGluona
+        run: |
+          kedro run --env ci --pipelines experiments_test --params experiments.autogluon_enabled=false
+          package_dir="$(python -c 'import json; from pathlib import Path; runs=sorted(Path("data/08_reporting/ci/experiments").glob("*/packages.json")); print(json.loads(runs[-1].read_text())["baseline"])')"
+          python scripts/smoke_model.py --package "$package_dir" --output "$RUNNER_TEMP/local-model-smoke.json"
+
       - name: Stan projektu
         id: status
         run: python scripts/project_status.py | tee -a "$GITHUB_OUTPUT"
@@ -90,6 +96,5 @@ jobs:
         run: python scripts/check_dod.py --sprint 1
 
       # Future scaffold — kroki kolejnych sprintów (nieaktywne, dopisywane na starcie sprintu):
-      # S3: WANDB_MODE=disabled, test zapisu i odczytu pakietu modelu
       # S4: testy API (tests/api/) bez prawdziwego modelu i bez prawdziwej bazy
       # S6 (OPTIONAL): deploy z CI jako osobny workflow

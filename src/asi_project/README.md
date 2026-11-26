@@ -354,3 +354,29 @@ Ten test trenuje mały model RF na danych syntetycznych, zapisuje i przenosi pak
 przenosi oryginalny katalog treningowy pod inną nazwę i porównuje predykcje
 w nowym procesie z zablokowanym `fit`. Bez przełącznika jest pomijany.
 Testy pakietu nie potwierdzają publikacji ani pobrania rzeczywistego W&B `production`.
+
+### Smoke test i przekazanie do API
+
+`scripts/smoke_model.py` wykonuje pięć predykcji w osobnym interpreterze, wspólnymi
+funkcjami `load_model_package` i `predict_model_package`. Usuwa target z wejścia,
+blokuje `fit`, sprawdza schemat, liczbę i kolejność wierszy, klasy `no`/`yes`,
+skończone prawdopodobieństwa w `[0, 1]` oraz zgodność klas z zapisanym progiem.
+
+Tryb `--package` sprawdza lokalny pakiet bez W&B. Tryb `--artifact` zawsze pobiera
+model do nowego katalogu tymczasowego i zapisuje identyfikator konkretnej wersji.
+Błąd pobrania przerywa test. `--expected-ref` pozwala wymagać wersji zatwierdzonej
+w ADR-2 i Model Card. Sam proces predykcji działa z wyłączonym W&B, bez klucza API.
+
+```powershell
+$release = Get-Content docs/notes/results/sprint-3-production.json -Raw | ConvertFrom-Json
+$env:WANDB_MODE = "online"
+wandb login
+python scripts/smoke_model.py --artifact $release.requested_ref --expected-ref $release.artifact_ref --output "$env:TEMP/production-smoke.json"
+```
+
+Raport nie jest nadpisywany; dla kolejnej próby wybierz nową ścieżkę `--output`.
+Szczegółowy [quickstart odbioru S3-4](../../docs/notes/sprint-3-smoke-test.md) opisuje
+świeży checkout i środowisko, wyniki kontroli, Actions secret oraz workflow online.
+API w S4 przyjmuje te same cechy bez targetu i używa tego samego loadera,
+normalizacji i progu. Wynik pozostaje parą `prediction` / `probability_positive`,
+w kolejności rekordów wejściowych. Utworzenie HTTP API jest osobnym etapem S4.
