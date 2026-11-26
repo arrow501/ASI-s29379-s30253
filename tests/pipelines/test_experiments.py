@@ -266,9 +266,37 @@ def test_validation_threshold_recovers_known_signal_below_half():
     assert result["validation_diagnostics"]["predicted_positive_count"] == 2
 
 
-def test_threshold_matches_independent_exhaustive_search_including_ties():
-    target = np.array([0, 1, 0, 1, 1, 0])
-    probability = np.array([0.1, 0.1, 0.2, 0.3, 0.3, 0.4])
+@pytest.mark.parametrize(
+    "target,probability",
+    [
+        pytest.param(
+            [0, 1, 0, 1, 1, 0],
+            [0.1, 0.1, 0.2, 0.3, 0.3, 0.4],
+            id="multiple-thresholds",
+        ),
+        pytest.param(
+            [1, 0, 0, 1, 1, 1, 0, 0],
+            [0.1] * 3 + [0.4] * 5,
+            id="rounding-tie",
+        ),
+        pytest.param(
+            [1, 0, 0, 1],
+            [0.1] * 3 + [0.4],
+            id="exact-tie",
+        ),
+        # Różnica F1 wynosi około 8,9e-7 i nie powinna być traktowana jako remis.
+        pytest.param(
+            [1, 0, 0] + [1] * 499 + [0] * 499,
+            [0.1] * 3 + [0.4] * 998,
+            id="close-but-not-tied",
+        ),
+        pytest.param([0, 1], [0.4, 0.4], id="single-threshold"),
+    ],
+)
+def test_threshold_matches_independent_exhaustive_search_including_ties(target, probability):
+    """Porównuje wybór progu z niezależnym obliczeniem F1 na podstawie TP, FP i FN."""
+    target = np.asarray(target)
+    probability = np.asarray(probability)
 
     def f1(threshold):
         prediction = probability >= threshold
@@ -298,7 +326,8 @@ def test_test_stage_freezes_validation_selection_and_does_not_recalibrate(
             "sample",
             tmp_path,
         )
-        result = evaluate_test(data, data, parameters, freeze_selection(report))
+        frozen = freeze_selection(report)
+        result = evaluate_test(data, data, parameters, frozen)
         assert result["status"] == "completed"
         assert result["selected_candidate"] == "baseline"
         assert result["test_used_for_selection"] is False
@@ -312,6 +341,6 @@ def test_test_stage_freezes_validation_selection_and_does_not_recalibrate(
             "tp": 0,
         }
         selections.append((result["selected_candidate"], result["decision_threshold"]))
-        with pytest.raises(FileExistsError):
-            evaluate_test(data, data, parameters, freeze_selection(report))
+        with pytest.raises(FileExistsError, match=r"test_metrics\.json"):
+            evaluate_test(data, data, parameters, frozen)
     assert selections[0] == selections[1]
