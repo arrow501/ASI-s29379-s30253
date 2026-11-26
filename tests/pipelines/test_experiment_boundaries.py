@@ -102,15 +102,24 @@ def test_graph_makes_selection_before_test_explicit(protocol, prepare, train):
         train,
         "freeze_validation_decision",
         "evaluate_frozen_test",
+        "package_experiment_models",
         "track_experiment",
     ]
     training = pipeline.nodes[1]
     assert "prepared_data" not in training.inputs
     assert "raw_data" in training.inputs  # Fingerprint only; actual fit uses prepared partitions.
-    test = pipeline.nodes[-2]
+    test = next(node for node in pipeline.nodes if node.name == "evaluate_frozen_test")
     assert "experiment_selection" in test.inputs and "experiment_report" not in test.inputs
-    assert [n.name for n in create_pipeline(protocol).nodes][-2:] == [
-        "freeze_validation_decision",
+    packaging = next(node for node in pipeline.nodes if node.name == "package_experiment_models")
+    assert "experiment_test_report" in packaging.inputs
+    assert "packaged_experiment_selection" in pipeline.nodes[-1].inputs
+    validation_only = create_pipeline(protocol)
+    packaging = next(
+        node for node in validation_only.nodes if node.name == "package_experiment_models"
+    )
+    assert "experiment_test_report" not in packaging.inputs
+    assert [n.name for n in validation_only.nodes][-2:] == [
+        "package_experiment_models",
         "track_experiment",
     ]
 

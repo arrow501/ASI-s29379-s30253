@@ -44,6 +44,7 @@ def test_tracked_catalog_connects_csv_preparation_training_and_artifacts(
         "raw_data": "data/01_raw/sample.csv"
         if env == "ci"
         else "data/01_raw/bank_marketing/bank-full.csv",
+        "model_package_store": f"data/06_models/{suffix}packages",
         "trained_model": f"data/06_models/{suffix}baseline.pkl",
         "metrics": f"data/08_reporting/{suffix}metrics.json",
     }

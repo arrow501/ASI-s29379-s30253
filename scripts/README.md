@@ -33,6 +33,19 @@ oraz ponowny odczyt artefaktów przez nowy katalog. `--env local` sprawdza pełn
 dane. Oba checki zapisują standardowe artefakty wybranego środowiska.
 Szczegóły: `docs/notes/sprint-2-handoff.md`.
 
+## Sprint 3 — pakiety modelu
+
+| Skrypt | Rola |
+|---|---|
+| `manage_model_package.py export` | zapis pakietu wskazanego kandydata z istniejącego eksperymentu, bez treningu |
+| `manage_model_package.py publish` | publikacja pakietu jako W&B Artifact; `--production` po zatwierdzeniu wyboru S3-2 |
+| `manage_model_package.py download` | pobranie wersji lub aliasu i zapis identyfikatora konkretnej wersji |
+| `predict_model_package.py` | wczytanie pakietu i predykcja CSV przez wspólny interfejs, bez treningu i W&B |
+
+[Kompletne komendy PowerShell](../src/asi_project/README.md#komendy-obsługi-pakietu)
+opisują środowisko, separatory, wersje artefaktów i lokalizację potwierdzeń.
+Sprawdzenie rzeczywistego `production` w niezależnym smoke teście należy do S3-4.
+
 ## Future scaffold (Sprinty 3–6)
 
 > Scaffold for Sprints 3–6 — do not implement before these sprints.
