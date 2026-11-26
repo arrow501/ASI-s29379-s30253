@@ -1,13 +1,20 @@
-"""Fit the explicit holdout protocol; orchestration lives in pipeline.py."""
+"""Trening z wydzieloną walidacją i eksport zamrożonych kandydatów do przenośnych pakietów."""
 
 import logging
 import time
+from pathlib import Path
 
 from asi_project.data import DataContractError
+from asi_project.model_package import (
+    build_model_metadata,
+    load_native_model,
+    save_model_package,
+    save_sklearn,
+)
 from asi_project.pipelines.data_science.nodes import _validate_xy, train_models
 
-from .artifacts import create_run, write_json
-from .models import fit_holdout_autogluon, save_sklearn, verify_reload
+from .artifacts import create_run, read_json, write_json
+from .models import fit_holdout_autogluon, verify_reload
 from .scoring import validation_result
 from .settings import validate_experiment_settings
 
@@ -105,3 +112,37 @@ def train_holdout_models(
         write_json(root / "metrics.json", report)
     LOGGER.info("Local results: %s", root)
     return report
+
+
+def package_experiment_models(selection, raw_data, store, tested=None):
+    """Eksportuje zamrożonych kandydatów do przenośnych pakietów dla dalszych odbiorców."""
+    root = Path(selection["run_dir"])
+
+    if read_json(root / "selection.json") != selection:
+        raise ValueError("Packaging requires the unchanged frozen selection.")
+
+    if tested is not None and read_json(root / "test_metrics.json") != tested:
+        raise ValueError("Packaging requires the unchanged test report.")
+
+    packages = {}
+
+    for name, candidate in sorted(selection["candidates"].items()):
+        metadata = build_model_metadata(
+            root,
+            name,
+            raw_data,
+            include_test=tested is not None,
+        )
+
+        model = load_native_model(
+            candidate["model_path"],
+            candidate["model_kind"],
+        )
+
+        package_dir = Path(store) / metadata["source_run_id"] / name
+
+        packages[name] = str(save_model_package(model, metadata, package_dir))
+
+    write_json(root / "packages.json", packages)
+
+    return selection, packages

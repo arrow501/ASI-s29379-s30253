@@ -1,27 +1,11 @@
-"""Native training artifacts for experiments; the production package belongs to S3-3."""
-
-import pickle
-from pathlib import Path
+"""Trening modeli eksperymentalnych ze wspólnymi funkcjami serializacji."""
 
 import numpy as np
 
 from asi_project.data import DataContractError
+from asi_project.model_package import load_native_model
 
 from .scoring import positive_probabilities
-
-
-def save_sklearn(model, path):
-    Path(path).write_bytes(pickle.dumps(model))
-
-
-def load_native_model(path, kind):
-    if kind == "sklearn":
-        return pickle.loads(Path(path).read_bytes())
-    if kind == "autogluon":
-        from autogluon.tabular import TabularPredictor
-
-        return TabularPredictor.load(str(path), verbosity=0)
-    raise ValueError(f"Unknown native experiment model kind: {kind!r}")
 
 
 def verify_reload(model, path, kind, X):

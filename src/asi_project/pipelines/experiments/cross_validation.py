@@ -7,10 +7,11 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from asi_project.model_package import save_sklearn
 from asi_project.pipelines.data_science.nodes import train_models
 
 from .artifacts import create_run, write_json
-from .models import fit_bagged_autogluon, fit_holdout_autogluon, save_sklearn, verify_reload
+from .models import fit_bagged_autogluon, fit_holdout_autogluon, verify_reload
 from .scoring import fold_result, positive_probabilities
 from .settings import validate_experiment_settings, validate_protocol_settings
 
