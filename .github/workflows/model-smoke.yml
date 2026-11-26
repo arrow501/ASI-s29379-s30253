@@ -1,0 +1,61 @@
+name: Production model smoke
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  KEDRO_DISABLE_TELEMETRY: "1"
+  WANDB_MODE: "online"
+  PYTHONUTF8: "1"
+
+jobs:
+  production-smoke:
+    name: Download production and predict without training
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash -el {0}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Świeże środowisko
+        uses: mamba-org/setup-micromamba@v2
+        with:
+          environment-file: environment.yml
+          cache-environment: true
+
+      - name: Instalacja wspólnego loadera i SDK
+        run: |
+          python -m pip install --no-deps -e .
+          python -m pip install -r requirements/preflight-s2.txt -r requirements/preflight-s3.txt -c constraints.txt
+
+      - name: Pobranie production i pięć predykcji w nowym procesie
+        env:
+          WANDB_API_KEY: ${{ secrets.WANDB_API_KEY }}
+          WANDB_CACHE_DIR: ${{ runner.temp }}/wandb-cache
+          WANDB_DATA_DIR: ${{ runner.temp }}/wandb-data
+          WANDB_CONFIG_DIR: ${{ runner.temp }}/wandb-config
+        run: |
+          if [[ -z "$WANDB_API_KEY" ]]; then
+            echo "::error::Dodaj repozytoryjny Actions secret WANDB_API_KEY z dostępem do artefaktu production."
+            exit 1
+          fi
+          artifact="$(python -c 'import json; from pathlib import Path; print(json.loads(Path("docs/notes/results/sprint-3-production.json").read_text())["requested_ref"])')"
+          expected="$(python -c 'import json; from pathlib import Path; print(json.loads(Path("docs/notes/results/sprint-3-production.json").read_text())["artifact_ref"])')"
+          python scripts/smoke_model.py --artifact "$artifact" --expected-ref "$expected" --output "$RUNNER_TEMP/production-smoke.json"
+
+      - name: Raport odbioru
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: production-model-smoke
+          path: ${{ runner.temp }}/production-smoke.json
+          if-no-files-found: ignore
+          retention-days: 14

@@ -246,6 +246,9 @@ i [decyzja ADR-2](docs/adr/0002-wybor-modelu.md).
 Opcjonalne logowanie eksperymentów: [W&B — tymczasowy dostęp, konfiguracja i ponowienia](docs/notes/sprint-3-wandb.md).
 Zapis pakietu z gotowego eksperymentu, publikacja W&B Artifact, pobranie i predykcja bez treningu:
 [komendy obsługi pakietu](src/asi_project/README.md#komendy-obsługi-pakietu).
+Odbiór wybranego modelu: [smoke test `production` na świeżym checkoutcie](docs/notes/sprint-3-smoke-test.md).
+Zwykłe CI sprawdza pakiet lokalnie bez sekretów; osobny workflow **Production model smoke**
+pobiera zatwierdzoną wersję z W&B i zapisuje raport pięciu predykcji.
 
 ## Definition of Done Sprintu 1
 
